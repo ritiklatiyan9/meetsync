@@ -38,8 +38,7 @@ function Header() {
     { to: "/", icon: Home, label: "Home" },
     { to: "/meeting", icon: Calendar, label: "Meeting" },
     { to: "/contact", icon: MessageCircle, label: "Contact" },
-    { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/settings", icon: Settings, label: "Settings" }
+
   ];
 
   const SignInDialog = () => (
@@ -91,7 +90,7 @@ function Header() {
                 className="flex items-center gap-2 relative group"
               >
                 <Calendar className="w-6 h-6 text-blue-500 group-hover:text-blue-600 transition-colors" />
-                <span className="text-lg font-semibold text-gray-200 group-hover:text-gray-900 transition-colors">
+                <span className="text-lg font-semibold text-gray-200 group-hover:text-gray-200 transition-colors">
                   MeetSync AI
                 </span>
               </Link>
@@ -140,7 +139,7 @@ function Header() {
           <SheetHeader className="p-6 border-b">
             <SheetTitle className="flex items-center gap-2">
               <Calendar className="w-6 h-6 text-blue-500" />
-              <span className="text-gray-800">MeetSync Menu</span>
+              <span className="text-gray-100">MeetSync AI</span>
             </SheetTitle>
           </SheetHeader>
           <div className="flex flex-col py-2">
@@ -149,7 +148,7 @@ function Header() {
                 key={item.to}
                 to={item.to}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-6 py-3 text-base text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 px-6 py-3 text-base text-gray-100 hover:text-gray-900 hover:bg-gray-50 transition-colors"
               >
                 <item.icon className="w-5 h-5" />
                 {item.label}

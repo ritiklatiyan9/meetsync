@@ -8,24 +8,30 @@ import 'locomotive-scroll/dist/locomotive-scroll.css';
 function Home() {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const locomotiveRef = useRef(null);
 
   useEffect(() => {
-    const locomotiveScroll = new LocomotiveScroll({
-      el: scrollRef.current,
-      smooth: true,
-      multiplier: 0.6,
-      lerp: 0.1,
-      smartphone: { smooth: true },
-      tablet: { smooth: true },
-      getDirection: true
-    });
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-    return () => locomotiveScroll.destroy();
+    if (!isMobile) {
+      locomotiveRef.current = new LocomotiveScroll({
+        el: scrollRef.current,
+        smooth: true,
+        multiplier: 0.6,
+        lerp: 0.1,
+        smartphone: { smooth: false },
+        tablet: { smooth: false },
+        getDirection: true
+      });
+    }
+
+    return () => {
+      locomotiveRef.current?.destroy();
+    };
   }, []);
 
   const handleGetStarted = () => navigate('/meeting');
 
-  // Reusable Card Component
   const FeatureCard = ({ icon: Icon, title, description, speed }) => (
     <div 
       className="relative group"
