@@ -20,33 +20,47 @@ const CLOUDINARY_API_SECRET = 's9y3AkhTAu7XR9u_c67n1KUy2_o';
 const useStore = create((set) => ({
   isAdmin: false,
   roomId: '',
+  userName: '',
+  localPeerId: '',
+  participants: [],
   streams: [],
   setRoomId: (id) => set({ roomId: id }),
   setIsAdmin: (flag) => set({ isAdmin: flag }),
+  setUserName: (name) => set({ userName: name }),
+  setLocalPeerId: (id) => set({ localPeerId: id }),
+  addParticipant: (participant) =>
+    set((state) => {
+      if (!participant) return {};
+      const exists = state.participants.some(p => p.id === participant.id);
+      return exists ? {} : { participants: [...state.participants, participant] };
+    }),
+  removeParticipant: (participantId) =>
+    set((state) => ({
+      participants: state.participants.filter(p => p.id !== participantId)
+    })),
   addStream: (newStream) =>
     set((state) => {
       if (!newStream) return {};
-      const alreadyExists = state.streams.some((stream) => stream.id === newStream.id);
-      if (!alreadyExists) {
-        return { streams: [...state.streams, newStream] };
-      }
-      return {};
+      const exists = state.streams.some(stream => stream.id === newStream.id);
+      return exists ? {} : { streams: [...state.streams, newStream] };
     }),
-  reset: () =>
-    set({
-      isAdmin: false,
-      roomId: '',
-      streams: [],
-    }),
+  reset: () => set({
+    isAdmin: false,
+    roomId: '',
+    userName: '',
+    participants: [],
+    localPeerId: '',
+    streams: []
+  }),
 }));
 
 // -------------------------
-// HOME (CREATE/JOIN MEETING)
+// HOME COMPONENT
 // -------------------------
 const Home = () => {
   const [name, setName] = useState('');
   const [roomCode, setRoomCode] = useState('');
-  const { setRoomId, setIsAdmin } = useStore();
+  const { setRoomId, setIsAdmin, setUserName } = useStore();
 
   const createRoom = () => {
     if (!name) {
@@ -56,6 +70,7 @@ const Home = () => {
     const id = Math.random().toString(36).substr(2, 9);
     setRoomId(id);
     setIsAdmin(true);
+    setUserName(name);
   };
 
   const joinRoom = () => {
@@ -65,6 +80,7 @@ const Home = () => {
     }
     setRoomId(roomCode);
     setIsAdmin(false);
+    setUserName(name);
   };
 
   return (
@@ -117,18 +133,21 @@ const Home = () => {
 };
 
 // ---------------------
-// MEETING PAGE LOGIC
+// MEETING PAGE COMPONENT
 // ---------------------
 const MeetingPage = () => {
-  const { isAdmin, roomId, streams } = useStore();
+  const { isAdmin, roomId, userName, participants, localPeerId, 
+          addParticipant, removeParticipant, reset, setLocalPeerId,
+          streams, addStream } = useStore();
   const [localStream, setLocalStream] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [uploadUrl, setUploadUrl] = useState(null);
   const peerRef = useRef(null);
+  const connectionsRef = useRef([]);
   const mediaRecorderRef = useRef(null);
   const recordedChunks = useRef([]);
 
-  // Helper to compute SHA-1 hash using SubtleCrypto
+  // Cloudinary Upload Functions
   const computeSHA1 = async (message) => {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
@@ -137,8 +156,7 @@ const MeetingPage = () => {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  // Upload video blob to Cloudinary
-  const uploadVideoToCloudinary = async (blob, mimeType) => {
+  const uploadVideoToCloudinary = async (blob) => {
     try {
       const timestamp = Math.floor(Date.now() / 1000);
       const paramsToSign = `timestamp=${timestamp}${CLOUDINARY_API_SECRET}`;
@@ -150,77 +168,20 @@ const MeetingPage = () => {
       formData.append('timestamp', timestamp);
       formData.append('signature', signature);
 
-      const uploadEndpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
-
-      const response = await fetch(uploadEndpoint, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const dataRes = await response.json();
-      if (dataRes.secure_url) {
-        console.log("Upload successful:", dataRes.secure_url);
-        return dataRes.secure_url;
-      } else {
-        console.error("Upload failed:", dataRes);
-        return null;
-      }
-    } catch (err) {
-      console.error("Error uploading video:", err);
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
+        { method: 'POST', body: formData }
+      );
+      
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error("Upload failed:", error);
       return null;
     }
   };
 
-  useEffect(() => {
-    let mounted = true;
-
-    // Get local media stream (camera/mic)
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        if (!mounted) return;
-        setLocalStream(stream);
-        useStore.getState().addStream(stream);
-
-        // Create Peer connection:
-        const peer = isAdmin ? new Peer(roomId) : new Peer();
-        peerRef.current = peer;
-
-        peer.on('open', (id) => {
-          console.log("Peer opened with id:", id);
-
-          if (isAdmin) {
-            peer.on('call', (call) => {
-              call.answer(stream);
-              call.on('stream', (remoteStream) => {
-                useStore.getState().addStream(remoteStream);
-              });
-            });
-          } else {
-            const call = peer.call(roomId, stream);
-            call.on('stream', (remoteStream) => {
-              useStore.getState().addStream(remoteStream);
-            });
-          }
-        });
-      })
-      .catch((error) => {
-        console.error("Error accessing media devices:", error);
-      });
-
-    return () => {
-      mounted = false;
-      if (peerRef.current) {
-        peerRef.current.destroy();
-      }
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [isAdmin, roomId]);
-
-  // ---------------------
-  // START RECORDING WITH VOICE MIXING
-  // ---------------------
+  // Recording Functions
   const startRecording = async () => {
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -246,86 +207,158 @@ const MeetingPage = () => {
         micAudioSource.connect(destination);
       }
 
-      await audioContext.resume();
-
       const combinedStream = new MediaStream();
-      displayStream.getVideoTracks().forEach((track) => combinedStream.addTrack(track));
-      destination.stream.getAudioTracks().forEach((track) => combinedStream.addTrack(track));
+      displayStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+      destination.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
 
-      const mimeType = MediaRecorder.isTypeSupported('video/webm; codecs=vp9')
-        ? 'video/webm; codecs=vp9'
-        : MediaRecorder.isTypeSupported('video/webm')
-          ? 'video/webm'
-          : '';
-      if (!mimeType) {
-        alert("No supported MIME type found for recording");
-        return;
-      }
+      const mimeType = MediaRecorder.isTypeSupported('video/webm; codecs=vp9') 
+        ? 'video/webm; codecs=vp9' 
+        : 'video/webm';
 
       mediaRecorderRef.current = new MediaRecorder(combinedStream, { mimeType });
       recordedChunks.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunks.current.push(event.data);
-        }
+        if (event.data.size > 0) recordedChunks.current.push(event.data);
       };
 
       mediaRecorderRef.current.onstop = async () => {
         const blob = new Blob(recordedChunks.current, { type: mimeType });
-        const uploadedVideoUrl = await uploadVideoToCloudinary(blob, mimeType);
-        if (uploadedVideoUrl) {
-          setUploadUrl(uploadedVideoUrl);
-          alert(`Meeting recorded and uploaded successfully. Video URL: ${uploadedVideoUrl}`);
-        } else {
-          alert("Recording finished, but upload failed.");
-        }
+        const url = await uploadVideoToCloudinary(blob);
+        setUploadUrl(url);
         recordedChunks.current = [];
-      };
-
-      mediaRecorderRef.current.onerror = (errorEvent) => {
-        console.error("Recording error:", errorEvent);
       };
 
       mediaRecorderRef.current.start(1000);
       setIsRecording(true);
     } catch (error) {
-      console.error("Error starting display recording:", error);
+      console.error("Recording error:", error);
     }
   };
 
-  // ---------------------
-  // STOP RECORDING
-  // ---------------------
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+    if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
 
-  // ---------------------
-  // END MEETING
-  // ---------------------
+  // PeerJS Connection Management
+  useEffect(() => {
+    let mounted = true;
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        if (!mounted) return;
+        setLocalStream(stream);
+        addStream(stream);
+
+        const peer = isAdmin ? new Peer(roomId) : new Peer();
+        peerRef.current = peer;
+        setLocalPeerId(peer.id);
+
+        addParticipant({
+          id: peer.id,
+          name: userName,
+          stream: stream,
+          isAdmin: isAdmin
+        });
+
+        peer.on('open', (id) => {
+          if (isAdmin) {
+            peer.on('call', call => {
+              call.answer(stream);
+              call.on('stream', remoteStream => {
+                addParticipant({
+                  id: call.peer,
+                  name: call.metadata.userName,
+                  stream: remoteStream,
+                  isAdmin: false
+                });
+                addStream(remoteStream);
+              });
+              connectionsRef.current.push(call);
+            });
+          } else {
+            const call = peer.call(roomId, stream, {
+              metadata: { userName: userName }
+            });
+            call.on('stream', remoteStream => {
+              addParticipant({
+                id: call.peer,
+                name: 'Host',
+                stream: remoteStream,
+                isAdmin: true
+              });
+              addStream(remoteStream);
+            });
+            connectionsRef.current.push(call);
+          }
+        });
+
+        peer.on('connection', conn => {
+          conn.on('data', data => {
+            if (data.type === 'remove-user' && data.userId === peer.id) {
+              endMeeting();
+            }
+          });
+        });
+
+        peer.on('error', error => {
+          console.error('PeerJS error:', error);
+        });
+
+      })
+      .catch(error => console.error("Media error:", error));
+
+    return () => {
+      mounted = false;
+      if (peerRef.current) peerRef.current.destroy();
+      if (localStream) localStream.getTracks().forEach(track => track.stop());
+      connectionsRef.current.forEach(conn => conn.close());
+    };
+  }, []);
+
+  const removeUser = (participantId) => {
+    if (!isAdmin) return;
+    
+    const conn = peerRef.current.connect(participantId);
+    conn.send({ type: 'remove-user', userId: participantId });
+    
+    connectionsRef.current = connectionsRef.current.filter(c => c.peer !== participantId);
+    removeParticipant(participantId);
+  };
+
   const endMeeting = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      stopRecording();
+    if (isAdmin) {
+      participants.forEach(p => {
+        if (p.id !== localPeerId) {
+          const conn = peerRef.current.connect(p.id);
+          conn.send({ type: 'remove-user', userId: p.id });
+        }
+      });
     }
-    if (peerRef.current) {
-      peerRef.current.destroy();
+    
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
     }
-    if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop());
-    }
-    useStore.getState().reset();
+    
+    if (peerRef.current) peerRef.current.destroy();
+    if (localStream) localStream.getTracks().forEach(track => track.stop());
+    connectionsRef.current.forEach(conn => conn.close());
+    reset();
   };
 
   return (
-    <div className="p-20 bg-black text-white min-h-screen">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Room id: {roomId}</h1>
+    <div className="p-4  md:p-10 lg:p-20 bg-black text-white min-h-screen">
+    <div className="flex md:mt-0 mt-20 flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-2 md:space-y-0">
+      <div>
+        <h1 className="text-lg md:text-xl lg:text-2xl font-bold">Room ID: {roomId}</h1>
+        <p className="text-gray-400 text-sm md:text-base">Your Name: {userName}</p>
+      </div>
+      <div className="space-x-2 flex flex-wrap">
         {isAdmin && (
-          <div className="space-x-2">
+          <>
             <Button 
               variant="outline" 
               onClick={() => navigator.clipboard.writeText(roomId)}
@@ -336,54 +369,76 @@ const MeetingPage = () => {
             <Button
               variant={isRecording ? "destructive" : "default"}
               onClick={isRecording ? stopRecording : startRecording}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
             >
               {isRecording ? "Stop Recording" : "Start Recording"}
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={endMeeting}
-              className="bg-red-600 text-white hover:bg-red-700"
-            >
-              End Meeting
-            </Button>
-          </div>
+          </>
         )}
+        <Button 
+          variant="destructive" 
+          onClick={endMeeting}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          End Meeting
+        </Button>
       </div>
-      {uploadUrl && (
-        <div className="mb-4">
-          <p className="text-green-400">
-            Uploaded Video URL:{" "}
-            <a href={uploadUrl} target="_blank" rel="noopener noreferrer" className="underline">
-              {uploadUrl}
-            </a>
-          </p>
-        </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {streams.map((stream, index) => (
-          <Video key={index} stream={stream} isLocal={stream === localStream} />
-        ))}
-      </div>
-      {uploadUrl && (
-        <div className="mt-8">
-          <VideoToAudioPage initialVideoUrl={uploadUrl} />
-        </div>
-      )}
     </div>
+  
+    {uploadUrl && (
+      <div className="mb-4 p-4 bg-gray-800 rounded-lg">
+        <p className="text-green-400">
+          Recording URL:{" "}
+          <a href={uploadUrl} target="_blank" rel="noopener noreferrer" className="underline">
+            {uploadUrl}
+          </a>
+        </p>
+      </div>
+    )}
+  
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {participants.map((participant) => (
+        <div key={participant.id} className="relative">
+          <Video 
+            stream={participant.stream} 
+            isLocal={participant.id === localPeerId}
+          />
+          <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded">
+            {participant.id === localPeerId ? 'You' : participant.name}
+            {participant.isAdmin && ' (Host)'}
+          </div>
+          {isAdmin && participant.id !== localPeerId && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="absolute top-2 right-2"
+              onClick={() => removeUser(participant.id)}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  
+    {uploadUrl && (
+      <div className="mt-8">
+        <VideoToAudioPage initialVideoUrl={uploadUrl} />
+      </div>
+    )}
+  </div>
+  
   );
 };
 
-// --------------
-// VIDEO TILE COMPONENT
-// --------------
+// -----------------------
+// VIDEO COMPONENT
+// -----------------------
 const Video = ({ stream, isLocal }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-    }
+    if (videoRef.current) videoRef.current.srcObject = stream;
   }, [stream]);
 
   return (
@@ -400,7 +455,6 @@ const Video = ({ stream, isLocal }) => {
 // -----------------------
 // VIDEO TO AUDIO COMPONENT
 // -----------------------
-// This component now accepts an initialVideoUrl prop to prefill the input.
 const VideoToAudioPage = ({ initialVideoUrl = '' }) => {
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
   const [audioUrl, setAudioUrl] = useState('');
@@ -417,103 +471,56 @@ const VideoToAudioPage = ({ initialVideoUrl = '' }) => {
         body: JSON.stringify({ url: videoUrl }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to extract audio');
-      }
-
+      if (!response.ok) throw new Error('Extraction failed');
+      
       const blob = await response.blob();
-      const audioUrl = URL.createObjectURL(blob);
-      setAudioUrl(audioUrl);
+      setAudioUrl(URL.createObjectURL(blob));
     } catch (err) {
-      setError(err.message || 'Error extracting audio');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!videoUrl) {
-      setError('Please provide a valid video URL');
-      return;
-    }
-    extractAudioFromVideo(videoUrl);
-  };
-
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-800 text-white rounded-lg shadow-xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">Video to Audio Analysis</h1>
-      <form onSubmit={handleSubmit} className="mb-8">
-        <div className="flex flex-col space-y-4">
-          <input
-            type="text"
-            placeholder="Enter Cloudinary Video URL"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            className="p-3 bg-gray-700 text-white border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 disabled:bg-blue-400"
-          >
-            {loading ? 'Extracting...' : 'Extract Audio'}
-          </button>
-        </div>
-      </form>
-
-      {loading && (
-        <div className="mb-4 p-4 bg-blue-900 text-blue-300 rounded-md">
-          Extracting audio... This may take a few moments.
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-900 text-red-300 rounded-md">
-          {error}
-        </div>
-      )}
-
+    <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg">
+      <h1 className="text-2xl font-bold mb-4">Audio Extraction</h1>
+      <div className="flex gap-4 mb-4">
+        <Input
+          value={videoUrl}
+          onChange={(e) => setVideoUrl(e.target.value)}
+          placeholder="Enter video URL"
+          className="bg-gray-700 text-white"
+        />
+        <Button 
+          onClick={() => extractAudioFromVideo(videoUrl)}
+          disabled={loading}
+        >
+          {loading ? 'Processing...' : 'Extract Audio'}
+        </Button>
+      </div>
+      
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      
       {audioUrl && (
-        <div className="mb-6 p-4 bg-green-900 rounded-md">
-          <h3 className="font-semibold mb-2">Extracted Audio</h3>
-          <audio controls src={audioUrl} className="w-full mb-4" />
-          <div className="flex gap-4">
-            <a
-              href={audioUrl}
-              download="extracted-audio.mp3"
-              className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-300"
-            >
-              Download MP3
-            </a>
-            <button
-              onClick={() => navigator.clipboard.writeText(audioUrl)}
-              className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300"
-            >
-              Copy URL
-            </button>
-          </div>
+        <div className="space-y-4">
+          <audio controls src={audioUrl} className="w-full" />
+          <Button 
+            onClick={() => window.open(audioUrl)}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Download Audio
+          </Button>
         </div>
       )}
-    </div>
-  );
-};
-
-// Dummy AudioToSummary component (replace with your actual implementation)
-const AudioToSummary = ({ audioUrl }) => {
-  return (
-    <div className="mt-4 p-4 bg-gray-800 text-white rounded shadow">
-      <h2 className="text-xl font-semibold">Audio Summary</h2>
-      <p>Summary for audio at: {audioUrl}</p>
     </div>
   );
 };
 
 // -----------------------
-// APP (ROOT COMPONENT)
+// APP COMPONENT
 // -----------------------
 export default function App() {
   const { roomId } = useStore();
   return roomId ? <MeetingPage /> : <Home />;
-}
+} 

@@ -120,19 +120,19 @@ function Home() {
           <StatsCard 
             icon={Users} 
             title="Active Users" 
-            value="50K+" 
+            value="50+" 
             speed="0.8" 
           />
           <StatsCard 
             icon={Video} 
             title="Meetings Hosted" 
-            value="1M+" 
+            value="100+" 
             speed="0.5" 
           />
           <StatsCard 
             icon={Clock} 
             title="Hours Saved" 
-            value="500K+" 
+            value="50+" 
             speed="0.2" 
           />
         </div>
