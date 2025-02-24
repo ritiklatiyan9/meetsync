@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Calendar, MessageCircle, Home, Menu, X, ChevronRight, Settings, LayoutDashboard } from "lucide-react";
+import { InteractiveHoverButton } from "../components/magicui/interactive-hover-button";
 import {
   Dialog,
   DialogContent,
@@ -36,8 +37,10 @@ function Header() {
 
   const navigationItems = [
     { to: "/", icon: Home, label: "Home" },
+   
     { to: "/meeting", icon: Calendar, label: "Meeting" },
     { to: "/contact", icon: MessageCircle, label: "Contact" },
+    
 
   ];
 
@@ -89,7 +92,16 @@ function Header() {
                 to="/" 
                 className="flex items-center gap-2 relative group"
               >
-                <Calendar className="w-6 h-6 text-blue-500 group-hover:text-blue-600 transition-colors" />
+                <svg className="w-7 h-7" viewBox="0 0 32 32" fill="none">
+                <path d="M16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32Z" fill="url(#paint0_linear_201_5)"/>
+                <path d="M19.5 11.5L23 15L19.5 18.5M12.5 11.5L9 15L12.5 18.5M21 22L11 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <defs>
+                  <linearGradient id="paint0_linear_201_5" x1="16" y1="0" x2="16" y2="32" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#6366F1"/>
+                    <stop offset="1" stopColor="#4338CA"/>
+                  </linearGradient>
+                </defs>
+              </svg>
                 <span className="text-lg font-semibold text-gray-200 group-hover:text-gray-200 transition-colors">
                   MeetSync AI
                 </span>
@@ -110,12 +122,8 @@ function Header() {
                   </span>
                 </Link>
               ))}
-              <Button 
-                onClick={() => setIsDialogOpen(true)}
-                className="ml-4 bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
-              >
-                Sign In
-              </Button>
+             
+              <InteractiveHoverButton    onClick={() => setIsDialogOpen(true)}>Sign-In</InteractiveHoverButton>
             </div>
 
             {/* Mobile Menu Button */}

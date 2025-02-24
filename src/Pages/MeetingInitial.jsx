@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Peer from 'peerjs';
 import { create } from 'zustand';
+import { Video as VideoIcon, Copy, Mic, MicOff, Camera, CameraOff, PhoneOff } from 'lucide-react';
 
 // Shadcn components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-// ----------------------
-// Cloudinary Configuration
-// ----------------------
+// Cloudinary Config
 const CLOUDINARY_CLOUD_NAME = 'dfnxjk10i';
 const CLOUDINARY_API_KEY = '891193764188835';
 const CLOUDINARY_API_SECRET = 's9y3AkhTAu7XR9u_c67n1KUy2_o';
 
-// ----------------------
-// ZUSTAND STORE SETUP
-// ----------------------
+// Zustand Store
 const useStore = create((set) => ({
   isAdmin: false,
   roomId: '',
@@ -30,9 +27,8 @@ const useStore = create((set) => ({
   setLocalPeerId: (id) => set({ localPeerId: id }),
   addParticipant: (participant) =>
     set((state) => {
-      if (!participant) return {};
-      const exists = state.participants.some(p => p.id === participant.id);
-      return exists ? {} : { participants: [...state.participants, participant] };
+      if (!participant || state.participants.some(p => p.id === participant.id)) return {};
+      return { participants: [...state.participants, participant] };
     }),
   removeParticipant: (participantId) =>
     set((state) => ({
@@ -40,9 +36,8 @@ const useStore = create((set) => ({
     })),
   addStream: (newStream) =>
     set((state) => {
-      if (!newStream) return {};
-      const exists = state.streams.some(stream => stream.id === newStream.id);
-      return exists ? {} : { streams: [...state.streams, newStream] };
+      if (!newStream || state.streams.some(stream => stream.id === newStream.id)) return {};
+      return { streams: [...state.streams, newStream] };
     }),
   reset: () => set({
     isAdmin: false,
@@ -54,19 +49,14 @@ const useStore = create((set) => ({
   }),
 }));
 
-// -------------------------
-// HOME COMPONENT
-// -------------------------
+// Home Component
 const Home = () => {
   const [name, setName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const { setRoomId, setIsAdmin, setUserName } = useStore();
 
   const createRoom = () => {
-    if (!name) {
-      alert("Please enter your name");
-      return;
-    }
+    if (!name) return alert("Please enter your name");
     const id = Math.random().toString(36).substr(2, 9);
     setRoomId(id);
     setIsAdmin(true);
@@ -74,17 +64,14 @@ const Home = () => {
   };
 
   const joinRoom = () => {
-    if (!name || !roomCode) {
-      alert("Please enter your name and room code");
-      return;
-    }
+    if (!name || !roomCode) return alert("Please enter name and room code");
     setRoomId(roomCode);
     setIsAdmin(false);
     setUserName(name);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
       <Card className="w-[350px] bg-gray-900 text-white shadow-2xl rounded-xl border border-gray-700">
         <CardHeader>
           <CardTitle className="text-center text-2xl">Video Meeting</CardTitle>
@@ -132,22 +119,22 @@ const Home = () => {
   );
 };
 
-// ---------------------
-// MEETING PAGE COMPONENT
-// ---------------------
+// Meeting Component
 const MeetingPage = () => {
   const { isAdmin, roomId, userName, participants, localPeerId, 
           addParticipant, removeParticipant, reset, setLocalPeerId,
           streams, addStream } = useStore();
   const [localStream, setLocalStream] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
   const [uploadUrl, setUploadUrl] = useState(null);
   const peerRef = useRef(null);
   const connectionsRef = useRef([]);
   const mediaRecorderRef = useRef(null);
   const recordedChunks = useRef([]);
 
-  // Cloudinary Upload Functions
+  // Cloudinary Functions
   const computeSHA1 = async (message) => {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
@@ -181,7 +168,7 @@ const MeetingPage = () => {
     }
   };
 
-  // Recording Functions
+  // Media Handling
   const startRecording = async () => {
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -243,7 +230,25 @@ const MeetingPage = () => {
     }
   };
 
-  // PeerJS Connection Management
+  const toggleMute = () => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const toggleVideo = () => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsVideoOff(!isVideoOff);
+    }
+  };
+
+  // PeerJS Connections
   useEffect(() => {
     let mounted = true;
 
@@ -264,25 +269,55 @@ const MeetingPage = () => {
           isAdmin: isAdmin
         });
 
+        // Handle incoming calls
+        peer.on('call', call => {
+          call.answer(stream);
+          call.on('stream', remoteStream => {
+            addParticipant({
+              id: call.peer,
+              name: call.metadata.userName,
+              stream: remoteStream,
+              isAdmin: call.metadata.isAdmin
+            });
+            addStream(remoteStream);
+          });
+          connectionsRef.current.push(call);
+        });
+
         peer.on('open', (id) => {
           if (isAdmin) {
-            peer.on('call', call => {
-              call.answer(stream);
-              call.on('stream', remoteStream => {
-                addParticipant({
-                  id: call.peer,
-                  name: call.metadata.userName,
-                  stream: remoteStream,
-                  isAdmin: false
-                });
-                addStream(remoteStream);
+            // Admin connection handling
+            peer.on('connection', conn => {
+              conn.on('data', data => {
+                if (data.type === 'new-user') {
+                  // Notify all participants about new user
+                  participants.forEach(p => {
+                    if (p.id !== data.userId && p.id !== peer.id) {
+                      const dataConn = peer.connect(p.id);
+                      dataConn.on('open', () => {
+                        dataConn.send({
+                          type: 'new-participant',
+                          participant: {
+                            id: data.userId,
+                            name: data.userName,
+                            isAdmin: false
+                          }
+                        });
+                      });
+                    }
+                  });
+                }
               });
-              connectionsRef.current.push(call);
             });
           } else {
+            // User joins: connect to admin
             const call = peer.call(roomId, stream, {
-              metadata: { userName: userName }
+              metadata: { 
+                userName: userName,
+                isAdmin: false
+              }
             });
+            
             call.on('stream', remoteStream => {
               addParticipant({
                 id: call.peer,
@@ -292,14 +327,82 @@ const MeetingPage = () => {
               });
               addStream(remoteStream);
             });
+
+            // Get existing participants
+            const dataConn = peer.connect(roomId);
+            dataConn.on('open', () => {
+              dataConn.send({ type: 'get-participants' });
+            });
+
+            dataConn.on('data', data => {
+              if (data.type === 'existing-participants') {
+                data.participants.forEach(participant => {
+                  if (participant.id === peer.id) return;
+                  const call = peer.call(participant.id, stream, {
+                    metadata: {
+                      userName: userName,
+                      isAdmin: false
+                    }
+                  });
+                  
+                  call.on('stream', remoteStream => {
+                    addParticipant({
+                      id: participant.id,
+                      name: participant.name,
+                      stream: remoteStream,
+                      isAdmin: participant.isAdmin
+                    });
+                    addStream(remoteStream);
+                  });
+                  
+                  connectionsRef.current.push(call);
+                });
+              }
+            });
+
             connectionsRef.current.push(call);
           }
         });
 
+        // Data channel handler
         peer.on('connection', conn => {
           conn.on('data', data => {
-            if (data.type === 'remove-user' && data.userId === peer.id) {
-              endMeeting();
+            if (data.type === 'get-participants' && isAdmin) {
+              const existingParticipants = participants
+                .filter(p => p.id !== conn.peer)
+                .map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  isAdmin: p.isAdmin
+                }));
+              
+              conn.send({
+                type: 'existing-participants',
+                participants: existingParticipants
+              });
+            }
+            else if (data.type === 'new-participant') {
+              const call = peer.call(data.participant.id, stream, {
+                metadata: {
+                  userName: userName,
+                  isAdmin: false
+                }
+              });
+              
+              call.on('stream', remoteStream => {
+                addParticipant({
+                  id: data.participant.id,
+                  name: data.participant.name,
+                  stream: remoteStream,
+                  isAdmin: data.participant.isAdmin
+                });
+                addStream(remoteStream);
+              });
+              
+              connectionsRef.current.push(call);
+            }
+            else if (data.type === 'remove-user') {
+              if (data.userId === peer.id) endMeeting();
             }
           });
         });
@@ -307,7 +410,6 @@ const MeetingPage = () => {
         peer.on('error', error => {
           console.error('PeerJS error:', error);
         });
-
       })
       .catch(error => console.error("Media error:", error));
 
@@ -350,95 +452,168 @@ const MeetingPage = () => {
   };
 
   return (
-    <div className="p-4  md:p-10 lg:p-20 bg-black text-white min-h-screen">
-    <div className="flex md:mt-0 mt-20 flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-2 md:space-y-0">
-      <div>
-        <h1 className="text-lg md:text-xl lg:text-2xl font-bold">Room ID: {roomId}</h1>
-        <p className="text-gray-400 text-sm md:text-base">Your Name: {userName}</p>
-      </div>
-      <div className="space-x-2 flex flex-wrap">
-        {isAdmin && (
-          <>
-            <Button 
-              variant="outline" 
-              onClick={() => navigator.clipboard.writeText(roomId)}
-              className="border-gray-500 text-black"
-            >
-              Copy Link
-            </Button>
-            <Button
-              variant={isRecording ? "destructive" : "default"}
-              onClick={isRecording ? stopRecording : startRecording}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-            >
-              {isRecording ? "Stop Recording" : "Start Recording"}
-            </Button>
-          </>
-        )}
-        <Button 
-          variant="destructive" 
-          onClick={endMeeting}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          End Meeting
-        </Button>
-      </div>
-    </div>
-  
-    {uploadUrl && (
-      <div className="mb-4 p-4 bg-gray-800 rounded-lg">
-        <p className="text-green-400">
-          Recording URL:{" "}
-          <a href={uploadUrl} target="_blank" rel="noopener noreferrer" className="underline">
-            {uploadUrl}
-          </a>
-        </p>
-      </div>
-    )}
-  
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {participants.map((participant) => (
-        <div key={participant.id} className="relative">
-          <Video 
-            stream={participant.stream} 
-            isLocal={participant.id === localPeerId}
-          />
-          <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded">
-            {participant.id === localPeerId ? 'You' : participant.name}
-            {participant.isAdmin && ' (Host)'}
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-6">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-8 mt-20">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-800/50 rounded-xl p-4">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl font-semibold text-white">Room: {roomId}</h1>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-gray-400 hover:text-white"
+                onClick={() => navigator.clipboard.writeText(roomId)}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-gray-400 text-sm">{participants.length} participants</p>
           </div>
-          {isAdmin && participant.id !== localPeerId && (
+          
+          <div className="flex items-center space-x-3">
+            {isAdmin && (
+              <Button
+                variant={isRecording ? "destructive" : "default"}
+                size="sm"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={isRecording ? stopRecording : startRecording}
+              >
+                <VideoIcon className="h-4 w-4 mr-2" />
+                {isRecording ? "Stop Recording" : "Start Recording"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Recording URL */}
+      {uploadUrl && (
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="bg-gray-800/50 rounded-xl p-4 border border-green-500/20">
+            <p className="text-green-400 flex items-center">
+              <span className="font-semibold mr-2">Recording saved:</span>
+              <a 
+                href={uploadUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="underline hover:text-green-300 truncate"
+              >
+                {uploadUrl}
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Video Grid */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {participants.map((participant) => (
+            <div key={participant.id} className="relative group">
+              <div className="aspect-video bg-gray-800 rounded-xl overflow-hidden shadow-lg">
+                <Video 
+                  stream={participant.stream} 
+                  isLocal={participant.id === localPeerId}
+                  isVideoOff={participant.id === localPeerId && isVideoOff}
+                />
+                
+                {participant.id === localPeerId && isVideoOff && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                    <div className="h-20 w-20 rounded-full bg-gray-700 flex items-center justify-center">
+                      <span className="text-2xl text-gray-400">
+                        {userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white font-medium">
+                      {participant.id === localPeerId ? 'You' : participant.name}
+                      {participant.isAdmin && ' (Host)'}
+                    </span>
+                    {participant.id === localPeerId && isMuted && (
+                      <MicOff className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
+                  
+                  {isAdmin && participant.id !== localPeerId && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeUser(participant.id)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="fixed bottom-0 left-0 right-0 backdrop-blur-sm border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-center items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="lg"
+              className={`rounded-full p-4 transition-colors ${
+                isMuted ? 'bg-red-500/20 text-red-500' : 'text-white hover:bg-purple-600'
+              }`}
+              onClick={toggleMute}
+            >
+              {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="lg"
+              className={`rounded-full p-4 transition-colors ${
+                isVideoOff ? 'bg-red-500/20 text-red-500' : 'text-white hover:bg-purple-600'
+              }`}
+              onClick={toggleVideo}
+            >
+              {isVideoOff ? <CameraOff className="h-6 w-6" /> : <Camera className="h-6 w-6" />}
+            </Button>
+            
             <Button
               variant="destructive"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={() => removeUser(participant.id)}
+              size="lg"
+              className="rounded-full p-4 bg-red-500 hover:bg-red-600"
+              onClick={endMeeting}
             >
-              Remove
+              <PhoneOff className="h-6 w-6" />
             </Button>
-          )}
+          </div>
         </div>
-      ))}
-    </div>
-  
-    {uploadUrl && (
-      <div className="mt-8">
-        <VideoToAudioPage initialVideoUrl={uploadUrl} />
       </div>
-    )}
-  </div>
-  
+
+      {/* Transcription */}
+      {uploadUrl && (
+        <div className="max-w-7xl mx-auto mt-8">
+          <VideoToTextPage initialVideoUrl={uploadUrl} />
+        </div>
+      )}
+    </div>
   );
 };
 
-// -----------------------
-// VIDEO COMPONENT
-// -----------------------
-const Video = ({ stream, isLocal }) => {
+// Video Component
+const Video = ({ stream, isLocal, isVideoOff }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.srcObject = stream;
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
   }, [stream]);
 
   return (
@@ -447,34 +622,68 @@ const Video = ({ stream, isLocal }) => {
       autoPlay
       playsInline
       muted={isLocal}
-      className="w-full h-auto rounded-lg bg-gray-800"
+      className={`w-full h-full object-cover ${isVideoOff ? 'invisible' : 'visible'}`}
     />
   );
 };
 
-// -----------------------
-// VIDEO TO AUDIO COMPONENT
-// -----------------------
-const VideoToAudioPage = ({ initialVideoUrl = '' }) => {
+// Transcription Component
+const VideoToTextPage = ({ initialVideoUrl = '' }) => {
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
-  const [audioUrl, setAudioUrl] = useState('');
+  const [transcript, setTranscript] = useState('');
+  const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const extractAudioFromVideo = async (videoUrl) => {
+  const convertVideoToText = async (videoUrl) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:5000/api/extract-audio', {
+      const response = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: videoUrl }),
+        headers: {
+          'Authorization': 'a4bcecf25bbd4dd5949fe2721ec15d8a',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          audio_url: videoUrl,
+          speaker_labels: true,
+          language_code: 'en_us'
+        })
       });
 
-      if (!response.ok) throw new Error('Extraction failed');
+      if (!response.ok) throw new Error('Transcription failed to start');
       
-      const blob = await response.blob();
-      setAudioUrl(URL.createObjectURL(blob));
+      const { id } = await response.json();
+      
+      let transcriptResult;
+      let attempts = 0;
+      const maxAttempts = 30;
+      
+      while (attempts < maxAttempts) {
+        const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${id}`, {
+          headers: { 'Authorization': 'a4bcecf25bbd4dd5949fe2721ec15d8a' }
+        });
+        
+        transcriptResult = await pollResponse.json();
+        
+        if (transcriptResult.status === 'completed') break;
+        if (transcriptResult.status === 'error') {
+          throw new Error(transcriptResult.error);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      }
+
+      if (attempts === maxAttempts) throw new Error('Transcription timed out');
+      
+      const formattedTranscript = transcriptResult.utterances
+        ?.map(utterance => `Speaker ${utterance.speaker}: ${utterance.text}`)
+        ?.join('\n\n') || transcriptResult.text;
+
+      setTranscript(formattedTranscript);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -482,45 +691,124 @@ const VideoToAudioPage = ({ initialVideoUrl = '' }) => {
     }
   };
 
+  const generateSummary = async () => {
+    setSummaryLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCEn0b9Ilfz8fouSI6iHYuunBJTEEiWGec`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Generate and Summarize the following meeting transcript...`
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) throw new Error('Summary generation failed');
+      
+      const data = await response.json();
+      const summaryText = data.candidates[0].content.parts[0].text;
+      setSummary(summaryText);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg">
-      <h1 className="text-2xl font-bold mb-4">Audio Extraction</h1>
-      <div className="flex gap-4 mb-4">
-        <Input
-          value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
-          placeholder="Enter video URL"
-          className="bg-gray-700 text-white"
-        />
-        <Button 
-          onClick={() => extractAudioFromVideo(videoUrl)}
-          disabled={loading}
-        >
-          {loading ? 'Processing...' : 'Extract Audio'}
-        </Button>
-      </div>
-      
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      
-      {audioUrl && (
-        <div className="space-y-4">
-          <audio controls src={audioUrl} className="w-full" />
-          <Button 
-            onClick={() => window.open(audioUrl)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Download Audio
-          </Button>
+    <Card className="bg-gray-800/50 border-gray-700">
+      <CardHeader>
+        <CardTitle className="text-white">Video to Text Conversion</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col space-y-4">
+          <div className="flex gap-4">
+            <Input
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Enter Cloudinary video URL"
+              className="bg-gray-700 text-white border-gray-600"
+            />
+            <Button 
+              onClick={() => convertVideoToText(videoUrl)}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? 'Converting...' : 'Convert to Text'}
+            </Button>
+          </div>
+          
+          {error && <div className="text-red-500 bg-red-500/10 p-3 rounded-lg">{error}</div>}
+          
+          {transcript && (
+            <div className="space-y-4">
+              <div className="bg-gray-900 text-gray-200 p-4 rounded-lg whitespace-pre-wrap max-h-96 overflow-y-auto">
+                {transcript}
+              </div>
+              
+              <div className="flex gap-4">
+                <Button 
+                  onClick={generateSummary}
+                  disabled={summaryLoading}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {summaryLoading ? 'Generating...' : 'Generate Summary'}
+                </Button>
+                
+                <Button 
+                  onClick={() => {
+                    const blob = new Blob([transcript], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'transcript.txt';
+                    a.click();
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Download Transcript
+                </Button>
+              </div>
+
+              {summary && (
+                <div className="space-y-4">
+                  <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
+                    <h3 className="text-lg font-semibold text-white mb-2">AI Summary</h3>
+                    <div className="text-gray-300 whitespace-pre-wrap">
+                      {summary}
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const blob = new Blob([summary], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'summary.txt';
+                      a.click();
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    Download Summary
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
-// -----------------------
-// APP COMPONENT
-// -----------------------
+// Main App
 export default function App() {
   const { roomId } = useStore();
   return roomId ? <MeetingPage /> : <Home />;
-} 
+}
