@@ -13,14 +13,14 @@ function App() {
     <AuthProvider>
     <BrowserRouter>
   
-      <div className="min-h-screen "  >
+      <div className="min-h-screen bg-black"  >
       <Header />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/meeting" element={<MeetingInitial />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/organisation" element={<Organisation/>} />
+          <Route path="/org" element={<Organisation/>} />
         </Routes>
       </div>
     </BrowserRouter>

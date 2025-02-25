@@ -41,7 +41,7 @@ function Header() {
 
   const loggedInNavigationItems = [
     ...baseNavigationItems,
-    { to: "/organization", icon: Building, label: "Organization" }, // Add Organization link
+    { to: "/org", icon: Building, label: "Organization" }, // Add Organization link
   ];
 
   const navigationItems = isLoggedIn ? loggedInNavigationItems : baseNavigationItems;

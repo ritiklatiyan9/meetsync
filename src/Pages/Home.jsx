@@ -173,11 +173,11 @@ function Home() {
               <span className="text-sm md:text-base font-medium">AI-Powered Meetings</span>
             </div>
             <h1 
-              className="text-5xl flex md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-400 to-purple-400"
+              className="text-5xl ml-12 flex md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-400 to-purple-400"
               data-scroll
               data-scroll-speed="0.1" // Reduced from 0.2 for smoother scrolling
             >
-              MeetSync  <span> <SparklesText className='text-white  ml-4 text-8xl' text="AI" /></span>
+              MeetSync  <span> <SparklesText className='text-white  text-5xl ml-2 md:ml-4 md:text-8xl' text="AI" /></span>
             </h1>
             <p 
               className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed"
