@@ -41,13 +41,14 @@ const Organisation = () => {
   });
   const [editUser, setEditUser] = useState(null); // State for editing user
   const [deleteUserId, setDeleteUserId] = useState(null); // State for delete confirmation
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false); // State for Add User modal
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [meetingsRes, usersRes] = await Promise.all([
-          fetch('http://https://meetsync-backend.vercel.app/api/v1/meeting'),
-          fetch('http://https://meetsync-backend.vercel.app/api/v1/users/getall'),
+          fetch('https://meetsync-backend.vercel.app/api/v1/meeting'),
+          fetch('https://meetsync-backend.vercel.app/api/v1/users/getall'),
         ]);
         if (!meetingsRes.ok || !usersRes.ok) {
           throw new Error('Failed to fetch data');
@@ -73,7 +74,7 @@ const Organisation = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://https://meetsync-backend.vercel.app/api/v1/users/register', {
+      const response = await fetch('https://meetsync-backend.vercel.app/api/v1/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser),
@@ -86,6 +87,7 @@ const Organisation = () => {
       const data = await response.json();
       setUsers([...users, data.data]);
       setNewUser({ email: '', mobile: '', name: '', password: '', role: 'user' });
+      setIsAddUserModalOpen(false); // Close the modal
       alert('User registered successfully!');
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -105,7 +107,7 @@ const Organisation = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://https://meetsync-backend.vercel.app/api/v1/users/deleteuser/${deleteUserId}`, {
+      const response = await fetch(`https://meetsync-backend.vercel.app/api/v1/users/deleteuser/${deleteUserId}`, {
         method: 'DELETE',
       });
 
@@ -124,16 +126,16 @@ const Organisation = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://https://meetsync-backend.vercel.app/api/v1/users/updateuser/${editUser._id}`, {
+      const response = await fetch(`https://meetsync-backend.vercel.app/api/v1/users/updateuser/${editUser._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editUser),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to update user');
       }
-  
+
       const updatedUser = await response.json();
       setUsers(users.map((user) => (user._id === updatedUser.data._id ? updatedUser.data : user)));
       setEditUser(null);
@@ -152,28 +154,36 @@ const Organisation = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-20">
+      {/* Add User Button */}
+      <Button onClick={() => setIsAddUserModalOpen(true)} className="mb-6 bg-green-600 hover:bg-green-700 text-white">
+        Add User
+      </Button>
+
       {/* Meetings Section */}
-      <Card className="bg-gray-800 border-gray-700 shadow-lg">
+      <Card className="bg-gray-800 border-gray-700 shadow-lg mb-8">
         <CardHeader>
           <CardTitle className="text-xl font-bold text-gray-200">Meetings</CardTitle>
         </CardHeader>
         <CardContent>
-          {meetings.length > 0 ? (
-            meetings.map((meeting) => (
-              <div key={meeting._id} className="mb-4 p-4 bg-gray-700 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-100">{meeting.title}</h3>
-                <p className="text-sm text-gray-400">{formatDate(meeting.createdAt)}</p>
-                <p className="text-gray-300">{meeting.summary}</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-400">No meetings available.</p>
-          )}
+          <div className="flex overflow-x-auto space-x-4">
+            {meetings.length > 0 ? (
+              meetings.map((meeting) => (
+                <div key={meeting._id} className="min-w-[250px] bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-100">{meeting.title}</h3>
+                  <p className="text-sm text-gray-400">{formatDate(meeting.createdAt)}</p>
+                  <p className="text-gray-300">{meeting.summary}</p>
+                  <p className="text-gray-300 overflow-hidden truncate text-ellipsis ">{meeting.videoUrl}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-400">No meetings available.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Users Section */}
-      <Card className="mt-8 bg-gray-800 border-gray-700 shadow-lg">
+      <Card className="bg-gray-800 border-gray-700 shadow-lg">
         <CardHeader>
           <CardTitle className="text-xl font-bold text-gray-200">Organization Members</CardTitle>
         </CardHeader>
@@ -316,6 +326,91 @@ const Organisation = () => {
             <DialogFooter>
               <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
                 Update
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Modal */}
+      <Dialog open={isAddUserModalOpen} onOpenChange={setIsAddUserModalOpen}>
+        <DialogContent className="bg-gray-800 text-white border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-200">Add New User</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Fill in the details to register a new user.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right text-gray-400">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={newUser.name}
+                  onChange={handleInputChange}
+                  className="col-span-3 bg-gray-700 text-white border-gray-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right text-gray-400">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  value={newUser.email}
+                  onChange={handleInputChange}
+                  className="col-span-3 bg-gray-700 text-white border-gray-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="mobile" className="text-right text-gray-400">
+                  Mobile
+                </Label>
+                <Input
+                  id="mobile"
+                  name="mobile"
+                  value={newUser.mobile}
+                  onChange={handleInputChange}
+                  className="col-span-3 bg-gray-700 text-white border-gray-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="password" className="text-right text-gray-400">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={newUser.password}
+                  onChange={handleInputChange}
+                  className="col-span-3 bg-gray-700 text-white border-gray-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right text-gray-400">
+                  Role
+                </Label>
+                <select
+                  id="role"
+                  name="role"
+                  value={newUser.role}
+                  onChange={handleInputChange}
+                  className="col-span-3 bg-gray-700 text-white border-gray-600"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">
+                Register
               </Button>
             </DialogFooter>
           </form>

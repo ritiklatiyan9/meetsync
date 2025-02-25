@@ -23,7 +23,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://https://meetsync-backend.vercel.app/api/v1/users/login", {
+      const response = await axios.post("https://meetsync-backend.vercel.app/api/v1/users/login", {
         email,
         password,
         role: "admin",
