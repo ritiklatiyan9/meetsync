@@ -7,6 +7,7 @@ import Contact from './Pages/Contact';
 import { AuthProvider } from "./context/AuthContext";
 import Login from './Pages/Login'
 import Organisation from './Pages/Organisation';
+import Shareable from './Pages/Shareable';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/meeting" element={<MeetingInitial />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/share/:meetingId" element={<Shareable />} />
           <Route path="/org" element={<Organisation/>} />
         </Routes>
       </div>
