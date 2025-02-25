@@ -7,6 +7,9 @@ import { SpinningText } from "../components/magicui/spinning-text";
 import { InteractiveHoverButton } from "../components/magicui/interactive-hover-button";
 import LocomotiveScroll from 'locomotive-scroll';
 import 'locomotive-scroll/dist/locomotive-scroll.css';
+import { SparklesText } from "../components/magicui/sparkles-text";
+
+import { PointerWrapper } from "../components/magicui/pointer";
 import {
   Card,
   CardContent,
@@ -106,7 +109,8 @@ function Home() {
       data-scroll-speed={!isMobile ? speed : undefined}
     >
       <div className="relative p-6 md:p-8 bg-white/5 hover:bg-white/10 backdrop-blur-lg rounded-2xl border border-white/10 transition-all duration-500 ease-out hover:scale-[1.02] overflow-hidden">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur"></div>
+      <div className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500 blur-lg"></div>
+
         <Icon className="w-10 h-10 md:w-12 md:h-12 mb-4 md:mb-6 text-purple-400 transition-transform group-hover:scale-110 group-hover:text-blue-400" />
         <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{title}</h3>
         <p className="text-sm md:text-base text-gray-400 leading-relaxed">{description}</p>
@@ -169,11 +173,11 @@ function Home() {
               <span className="text-sm md:text-base font-medium">AI-Powered Meetings</span>
             </div>
             <h1 
-              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-400 to-purple-400"
+              className="text-5xl flex md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-400 to-purple-400"
               data-scroll
               data-scroll-speed="0.1" // Reduced from 0.2 for smoother scrolling
             >
-              MeetSync AI
+              MeetSync  <span> <SparklesText className='text-white  ml-4 text-8xl' text="AI" /></span>
             </h1>
             <p 
               className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed"
@@ -238,11 +242,12 @@ function Home() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-16 md:py-32 relative" data-scroll-section>
+        <PointerWrapper>
+        <section id="features" className="py-16 md:py-10 relative border-t-2 " data-scroll-section>
           <div className="max-w-6xl mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium mb-4">WHAT WE OFFER</span>
-              <FlipText className="text-4xl md:text-7xl font-bold mb-6">Powerful Features</FlipText>
+              <span className="inline-block px-4 py-2 rounded-full bg-white/10 text-sm text-blue-400 font-medium mb-4">WHAT WE OFFER</span>
+              <SparklesText className='m-4' text="Powerful Features" />
               <p className="max-w-2xl mx-auto text-gray-400 text-lg">Our AI-powered platform enhances your meeting experience with cutting-edge tools</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -267,6 +272,7 @@ function Home() {
             </div>
           </div>
         </section>
+        </PointerWrapper>
 
         {/* Demo Section */}
         <section id="demo" className="min-h-screen relative flex items-center" data-scroll-section>
@@ -279,9 +285,7 @@ function Home() {
                 data-scroll-speed="0.4" // Reduced from 0.8 for smoother scrolling
               >
                 <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium">SEE IT IN ACTION</span>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-                  <SpinningText>MeetSync AI  MeetSync AI</SpinningText>
-                </h2>
+               
                 <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
                   Watch how MeetSync AI transforms your meetings into productive, actionable insights with just a few clicks.
                 </p>
@@ -318,7 +322,7 @@ function Home() {
                 data-scroll
                 data-scroll-speed="0.4" // Reduced from 0.8 for smoother scrolling
               >
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500/30 rounded-3xl blur-xs opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative h-full rounded-2xl md:rounded-3xl bg-black/50 border border-white/10 backdrop-blur-lg overflow-hidden transition-all duration-500 hover:scale-[0.98]">
                   <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
                     <div className="text-center">
