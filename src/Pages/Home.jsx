@@ -49,14 +49,14 @@ function Home() {
       const docHeight = document.documentElement.scrollHeight;
       const totalScroll = docHeight - winHeight;
       const scrolled = Math.min(scrollPos / totalScroll, 1);
-
+      
       setScrollProgress(scrolled);
       setIsScrolling(scrollPos > 50);
     };
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll);
-
+    
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
@@ -72,19 +72,17 @@ function Home() {
     locomotiveScroll.current = new LocomotiveScroll({
       el: scrollRef.current,
       smooth: true,
-      multiplier: 0.5, // Adjust scroll speed (lower = slower)
-      lerp: 0.01, // Smoother interpolation (lower = smoother)
+      multiplier: 0.8,
+      class: 'is-inview',
+      lerp: 0.05,
       smartphone: {
-        smooth: true, // Enable smooth scrolling on mobile
-        breakpoint: 767,
-        touchMultiplier: 2.5, // Adjust touch sensitivity on mobile
+        smooth: false,
+        breakpoint: 767
       },
       tablet: {
         smooth: true,
-        breakpoint: 1024,
-      },
-      reloadOnContextChange: true, // Reload scroll when context changes
-      resetNativeScroll: true, // Reset native scroll behavior
+        breakpoint: 1024
+      }
     });
   };
 
@@ -101,95 +99,306 @@ function Home() {
     }
   };
 
-  const FeatureCard = ({ icon: Icon, title, description }) => (
-    <Card className="feature-card">
-      <CardContent>
-        <Icon size={32} className="mb-4" />
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardContent>
-    </Card>
+  const FeatureCard = ({ icon: Icon, title, description, speed }) => (
+    <div 
+      className="relative group"
+      data-scroll={!isMobile ? true : undefined}
+      data-scroll-speed={!isMobile ? speed : undefined}
+    >
+      <div className="relative p-6 md:p-8 bg-white/5 hover:bg-white/10 backdrop-blur-lg rounded-2xl border border-white/10 transition-all duration-500 ease-out hover:scale-[1.02] overflow-hidden">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur"></div>
+        <Icon className="w-10 h-10 md:w-12 md:h-12 mb-4 md:mb-6 text-purple-400 transition-transform group-hover:scale-110 group-hover:text-blue-400" />
+        <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{title}</h3>
+        <p className="text-sm md:text-base text-gray-400 leading-relaxed">{description}</p>
+      </div>
+    </div>
   );
 
-  const StatsCard = ({ icon: Icon, title, value }) => (
-    <Card className="stats-card">
-      <CardContent>
-        <Icon size={32} className="mb-4" />
-        <CardTitle>{value}</CardTitle>
-        <CardDescription>{title}</CardDescription>
-      </CardContent>
-    </Card>
+  const StatsCard = ({ icon: Icon, title, value, speed }) => (
+    <div 
+      className="relative group overflow-hidden"
+      data-scroll={!isMobile ? true : undefined}
+      data-scroll-speed={!isMobile ? speed : undefined}
+    >
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur"></div>
+      <div className="relative p-6 md:p-8 bg-white/5 hover:bg-white/10 backdrop-blur-lg rounded-2xl border border-white/10 transition-all duration-500 ease-out hover:scale-[1.02]">
+        <Icon className="w-8 h-8 md:w-10 md:h-10 mb-4 text-blue-400 group-hover:text-purple-400 transition-colors duration-300" />
+        <div className="text-3xl md:text-4xl font-bold mb-2">{value}</div>
+        <div className="text-sm md:text-base text-gray-400">{title}</div>
+      </div>
+    </div>
   );
 
-  const TestimonialCard = ({ name, role, quote, avatar }) => (
-    <Card className="testimonial-card">
-      <CardContent>
-        <div className="avatar">{name.charAt(0)}</div>
-        <CardTitle>{name}</CardTitle>
-        <CardDescription>{role}</CardDescription>
-        <p className="quote">{quote}</p>
-      </CardContent>
-    </Card>
+  const TestimonialCard = ({ name, role, quote, avatar, delay }) => (
+    <div 
+      className="relative group"
+      data-scroll={!isMobile ? true : undefined}
+      data-scroll-speed={!isMobile ? "0.3" : undefined}
+    >
+      <div className="relative p-6 md:p-8 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 transition-all duration-500 ease-out hover:scale-[1.02] hover:bg-white/10">
+        <div className="flex items-center mb-4 md:mb-6">
+          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 flex items-center justify-center text-xl font-bold">
+            {name.charAt(0)}
+          </div>
+          <div className="ml-4">
+            <h4 className="text-lg md:text-xl font-semibold">{name}</h4>
+            <p className="text-sm text-gray-400">{role}</p>
+          </div>
+        </div>
+        <p className="text-sm md:text-base text-gray-300 italic">{quote}</p>
+      </div>
+    </div>
   );
 
   return (
-    <div data-scroll-container ref={scrollRef}>
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <SpinningText text="AI-Powered Meetings" />
-          <h1>MeetSync AI</h1>
-          <p>Transform your meetings with AI-powered insights and seamless collaboration</p>
-          <div className="hero-buttons">
-            <Button onClick={handleGetStarted}>Get Started</Button>
-            <Button variant="outline" onClick={scrollToFeatures}>
-              Learn More <ArrowRight className="ml-2" />
-            </Button>
+    <>
+      
+      
+      {/* Progress Bar */}
+      <div 
+        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 z-50 transition-all duration-300" 
+        style={{ width: `${scrollProgress * 100}%` }}
+      />
+
+      <main ref={scrollRef} data-scroll-container className="bg-black text-white overflow-hidden">
+        {/* Hero Section */}
+        <section className="min-h-screen relative flex items-center justify-center p-4 md:p-8" data-scroll-section>
+          <WarpBackground
+            className="absolute opacity-15 inset-0 z-0"
+            colors={["#3b82f6", "#8b5cf6"]}
+            backgroundOpacity={0.1}
+            speed={0.5}
+            blur={2}
+          />
+          <div 
+            className="absolute w-64 h-64 md:w-96 md:h-96 bg-blue-500/20 rounded-full blur-3xl -top-32 -left-32 md:-top-48 md:-left-48 animate-pulse"
+            data-scroll
+            data-scroll-speed="2"
+            data-scroll-direction="horizontal"
+          />
+          <div 
+            className="absolute w-64 h-64 md:w-96 md:h-96 bg-purple-500/20 rounded-full blur-3xl -bottom-32 -right-32 md:-bottom-48 md:-right-48 animate-pulse delay-700"
+            data-scroll
+            data-scroll-speed="1.5"
+            data-scroll-direction="horizontal"
+          />
+          <div className="relative z-10 max-w-5xl mx-auto text-center">
+            <div 
+              className="inline-flex items-center px-4 py-2 md:px-6 md:py-3 mb-8 md:mb-12 rounded-full border border-white/20 bg-white/10 backdrop-blur-xl hover:bg-white/15 transition-all duration-300"
+              data-scroll
+              data-scroll-speed="0.5"
+            >
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3 text-blue-400 animate-pulse" />
+              <span className="text-sm md:text-base font-medium">AI-Powered Meetings</span>
+            </div>
+            <h1 
+              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-400 to-purple-400"
+              data-scroll
+              data-scroll-speed="0.2"
+            >
+              MeetSync AI
+            </h1>
+            <p 
+              className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed"
+              data-scroll
+              data-scroll-speed="0.7"
+            >
+              Transform your meetings with AI-powered insights and seamless collaboration
+            </p>
+            <div className="space-y-4 md:space-y-0 md:flex md:items-center md:justify-center md:space-x-4">
+              <InteractiveHoverButton 
+                className="text-black shadow-xs shadow-slate-100 text-sm md:text-base w-full md:w-auto"
+                onClick={handleGetStarted}
+                data-scroll
+                data-scroll-speed="0.8"
+              >
+                Get Started
+              </InteractiveHoverButton>
+              <Button 
+                onClick={scrollToFeatures}
+                variant="outline" 
+                className="w-full md:w-auto border-white/20 bg-white/5 hover:bg-white/10 hover:text-white backdrop-blur-md"
+                data-scroll
+                data-scroll-speed="0.8"
+              >
+                Learn More
+                <ChevronDown className="ml-2 h-4 w-4 animate-bounce" />
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="scroll-indicator">Scroll to explore</div>
-      </section>
+          
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+            <div className="w-5 h-10 border-2 border-white/30 rounded-full flex justify-center p-1">
+              <div className="w-1 h-3 bg-white rounded-full animate-[scroll_1.5s_infinite]"></div>
+            </div>
+            <p className="mt-2 text-xs font-light text-white/50">Scroll to explore</p>
+          </div>
+        </section>
 
-      {/* Stats Section */}
-      <section id="stats" className="stats-section">
-        <StatsCard icon={Users} title="Active Users" value="10K+" />
-        <StatsCard icon={Clock} title="Hours Saved" value="500K+" />
-        <StatsCard icon={Star} title="Positive Reviews" value="4.9/5" />
-      </section>
+        {/* Stats Section */}
+        <section className="py-16 md:py-32 relative" data-scroll-section>
+          <div className="max-w-6xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+            <StatsCard 
+              icon={Users} 
+              title="Active Users" 
+              value="10,000+" 
+              speed="0.2" 
+            />
+            <StatsCard 
+              icon={Video} 
+              title="Meetings Hosted" 
+              value="50,000+" 
+              speed="0.3" 
+            />
+            <StatsCard 
+              icon={Clock} 
+              title="Hours Saved" 
+              value="125,000+" 
+              speed="0.4" 
+            />
+          </div>
+        </section>
 
-      {/* Features Section */}
-      <section id="features" className="features-section">
-        <h2>WHAT WE OFFER</h2>
-        <h3>Powerful Features</h3>
-        <p>Our AI-powered platform enhances your meeting experience with cutting-edge tools.</p>
-        <div className="features-grid">
-          <FeatureCard icon={Zap} title="Real-Time Insights" description="Get instant feedback during meetings." />
-          <FeatureCard icon={Shield} title="Secure Collaboration" description="End-to-end encrypted communication." />
-          <FeatureCard icon={Video} title="HD Video Conferencing" description="Crystal-clear video quality." />
-        </div>
-      </section>
+        {/* Features Section */}
+        <section id="features" className="py-16 md:py-32 relative" data-scroll-section>
+          <div className="max-w-6xl mx-auto px-4 md:px-8">
+            <div className="text-center mb-16">
+              <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium mb-4">WHAT WE OFFER</span>
+              <FlipText className="text-4xl md:text-7xl font-bold mb-6">Powerful Features</FlipText>
+              <p className="max-w-2xl mx-auto text-gray-400 text-lg">Our AI-powered platform enhances your meeting experience with cutting-edge tools</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              
+              
+              <FeatureCard
+                icon={Shield}
+                title="Secure Platform"
+                description="Enterprise-grade security with end-to-end encryption for all your confidential meetings and data"
+                speed="0.5"
+              />
+              
+              
+              <FeatureCard
+                icon={Clock}
+                title="Time Management"
+                description="Keep meetings on track with intelligent time allocation and agenda monitoring features"
+                speed="0.4"
+              />
+              <FeatureCard
+                icon={Video}
+                title="HD Video Conferencing"
+                description="Crystal clear audio and video with adaptive streaming technology for any connection"
+                speed="0.6"
+              />
+            </div>
+          </div>
+        </section>
 
-      {/* Demo Section */}
-      <section className="demo-section">
-        <h2>SEE IT IN ACTION</h2>
-        <h3>MeetSync AI</h3>
-        <p>Watch how MeetSync AI transforms your meetings into productive, actionable insights with just a few clicks.</p>
-        <div className="demo-steps">
-          <div>1. Setup your meeting in seconds</div>
-          <div>2. Invite participants easily</div>
-          <div>3. Get AI-powered insights during and after</div>
-        </div>
-        <div className="demo-buttons">
-          <Button>Try it Now</Button>
-          <Button variant="outline">Live Demo</Button>
-        </div>
-      </section>
+        {/* Demo Section */}
+        <section id="demo" className="min-h-screen relative flex items-center" data-scroll-section>
+          <div className="absolute inset-0 bg-gradient-to-b from-black via-purple-900/10 to-black opacity-30"></div>
+          <div className="max-w-6xl mx-auto px-4 md:px-8 w-full py-12 md:py-24 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
+              <div 
+                className="space-y-6 md:space-y-8"
+                data-scroll
+                data-scroll-speed="0.8"
+              >
+                <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium">SEE IT IN ACTION</span>
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+                  <SpinningText>MeetSync AI  MeetSync AI</SpinningText>
+                </h2>
+                <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
+                  Watch how MeetSync AI transforms your meetings into productive, actionable insights with just a few clicks.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center mt-1">
+                      <span className="text-xs">1</span>
+                    </div>
+                    <p className="ml-3 text-gray-300">Setup your meeting in seconds</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center mt-1">
+                      <span className="text-xs">2</span>
+                    </div>
+                    <p className="ml-3 text-gray-300">Invite participants easily</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center mt-1">
+                      <span className="text-xs">3</span>
+                    </div>
+                    <p className="ml-3 text-gray-300">Get AI-powered insights during and after</p>
+                  </li>
+                </ul>
+                <Button 
+                  onClick={handleGetStarted}
+                  className="mt-8 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg px-6 py-3 text-base font-medium transition-all duration-300"
+                >
+                  Try it Now
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+              <div 
+                className="relative aspect-video group"
+                data-scroll
+                data-scroll-speed="0.8"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative h-full rounded-2xl md:rounded-3xl bg-black/50 border border-white/10 backdrop-blur-lg overflow-hidden transition-all duration-500 hover:scale-[0.98]">
+                  <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
+                    <div className="text-center">
+                      <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-lg flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-500 cursor-pointer">
+                        <Video className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="text-xl md:text-2xl font-bold mt-6 mb-2 md:mb-4">Live Demo</h3>
+                      <p className="text-sm md:text-base text-gray-400">Experience the future of AI-powered meetings</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section id="testimonials" className="py-16 md:py-32 relative" data-scroll-section>
+          <div className="max-w-6xl mx-auto px-4 md:px-8">
+            <div className="text-center mb-16">
+              <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium mb-4">TESTIMONIALS</span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">What Our Users Say</h2>
+              <p className="max-w-2xl mx-auto text-gray-400 text-lg">Join thousands of satisfied customers who have transformed their meeting experience</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            
+              <TestimonialCard
+                name="Asit Upadhyay"
+                role="Tech Lead"
+                quote="The meeting analytics help us identify patterns and inefficiencies we never noticed before. Our meetings are now 40% shorter and twice as productive."
+              />
+           
+            </div>
+          </div>
+        </section>
+
+      
+      </main>
 
       {/* Footer */}
-      <footer className="footer">
-        <p>&copy; 2023 MeetSync AI. All rights reserved.</p>
-      </footer>
-    </div>
+     
+
+     
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes scroll {
+          0% { transform: translateY(0); }
+          50% { transform: translateY(5px); }
+          100% { transform: translateY(0); }
+        }
+      `}</style>
+    </>
   );
 }
 
