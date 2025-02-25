@@ -122,17 +122,17 @@ const Home = () => {
 // Meeting Component
 const MeetingPage = () => {
   const { isAdmin, roomId, userName, participants, localPeerId, 
-          addParticipant, removeParticipant, reset, setLocalPeerId,
-          streams, addStream } = useStore();
-  const [localStream, setLocalStream] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [uploadUrl, setUploadUrl] = useState(null);
-  const peerRef = useRef(null);
-  const connectionsRef = useRef([]);
-  const mediaRecorderRef = useRef(null);
-  const recordedChunks = useRef([]);
+    addParticipant, removeParticipant, reset, setLocalPeerId,
+    streams, addStream } = useStore();
+const [localStream, setLocalStream] = useState(null);
+const [isRecording, setIsRecording] = useState(false);
+const [isMuted, setIsMuted] = useState(false);
+const [isVideoOff, setIsVideoOff] = useState(false);
+const [uploadUrl, setUploadUrl] = useState(null);
+const peerRef = useRef(null);
+const connectionsRef = useRef([]);
+const mediaRecorderRef = useRef(null);
+const recordedChunks = useRef([]);
 
   // Cloudinary Functions
   const computeSHA1 = async (message) => {
@@ -289,9 +289,10 @@ const MeetingPage = () => {
             // Admin connection handling
             peer.on('connection', conn => {
               conn.on('data', data => {
+                const currentState = useStore.getState();
                 if (data.type === 'new-user') {
                   // Notify all participants about new user
-                  participants.forEach(p => {
+                  currentState.participants.forEach(p => {
                     if (p.id !== data.userId && p.id !== peer.id) {
                       const dataConn = peer.connect(p.id);
                       dataConn.on('open', () => {
@@ -340,7 +341,7 @@ const MeetingPage = () => {
                   if (participant.id === peer.id) return;
                   const call = peer.call(participant.id, stream, {
                     metadata: {
-                      userName: userName,
+                      userName: useStore.getState().userName,
                       isAdmin: false
                     }
                   });
@@ -364,11 +365,12 @@ const MeetingPage = () => {
           }
         });
 
-        // Data channel handler
+        // Data channel handler (Updated state access)
         peer.on('connection', conn => {
           conn.on('data', data => {
-            if (data.type === 'get-participants' && isAdmin) {
-              const existingParticipants = participants
+            const currentState = useStore.getState();
+            if (data.type === 'get-participants' && currentState.isAdmin) {
+              const existingParticipants = currentState.participants
                 .filter(p => p.id !== conn.peer)
                 .map(p => ({
                   id: p.id,
@@ -382,6 +384,7 @@ const MeetingPage = () => {
               });
             }
             else if (data.type === 'new-participant') {
+              const { userName } = useStore.getState();
               const call = peer.call(data.participant.id, stream, {
                 metadata: {
                   userName: userName,
@@ -420,6 +423,7 @@ const MeetingPage = () => {
       connectionsRef.current.forEach(conn => conn.close());
     };
   }, []);
+  
 
   const removeUser = (participantId) => {
     if (!isAdmin) return;
@@ -559,7 +563,7 @@ const MeetingPage = () => {
       </div>
 
       {/* Controls */}
-      <div className="fixed bottom-0 left-0 right-0 backdrop-blur-sm border-gray-800">
+      <div className="fixed bottom-0 left-0 right-0 ">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-center items-center space-x-4">
             <Button
@@ -703,12 +707,13 @@ const VideoToTextPage = ({ initialVideoUrl = '' }) => {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Generate and Summarize the following meeting transcript...`
+              text: `Generate a Detailed summary of the following meeting transcript, highlighting key decisions, action items, and main discussion points:\n\n${transcript}`
             }]
           }]
         })
       });
 
+      
       if (!response.ok) throw new Error('Summary generation failed');
       
       const data = await response.json();

@@ -19,17 +19,32 @@ import {
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0); // Tracks last scroll position
+  const [headerVisible, setHeaderVisible] = useState(true); // Controls header visibility
 
   useEffect(() => {
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 20;
-      setScrolled(isScrolled);
+      const currentScrollY = window.scrollY;
+
+      // Determine scroll direction
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down and past a threshold (e.g., 50px)
+        setHeaderVisible(false);
+      } else {
+        // Scrolling up
+        setHeaderVisible(true);
+      }
+
+      // Update last scroll position
+      setLastScrollY(currentScrollY);
     };
 
+    // Add scroll event listener
     window.addEventListener('scroll', handleScroll);
+
+    // Cleanup on unmount
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const handleGoogleSignIn = () => {
     console.log("Initiating Google Sign-In");
@@ -37,11 +52,8 @@ function Header() {
 
   const navigationItems = [
     { to: "/", icon: Home, label: "Home" },
-   
     { to: "/meeting", icon: Calendar, label: "Meeting" },
     { to: "/contact", icon: MessageCircle, label: "Contact" },
-    
-
   ];
 
   const SignInDialog = () => (
@@ -79,11 +91,17 @@ function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-white/20 backdrop-blur-md border-b border-gray-100' 
-          : 'bg-white/10 backdrop-blur-sm'
-      }`}>
+      {/* Header */}
+      <header
+        className={`fixed top-0 w-full z-50 transition-transform duration-300 ${
+          headerVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+        style={{
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(10px)",
+          borderBottom: "1px solid rgba(200, 200, 200, 0.2)",
+        }}
+      >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             {/* Logo / Brand */}
@@ -93,21 +111,20 @@ function Header() {
                 className="flex items-center gap-2 relative group"
               >
                 <svg className="w-7 h-7" viewBox="0 0 32 32" fill="none">
-                <path d="M16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32Z" fill="url(#paint0_linear_201_5)"/>
-                <path d="M19.5 11.5L23 15L19.5 18.5M12.5 11.5L9 15L12.5 18.5M21 22L11 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <defs>
-                  <linearGradient id="paint0_linear_201_5" x1="16" y1="0" x2="16" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#6366F1"/>
-                    <stop offset="1" stopColor="#4338CA"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+                  <path d="M16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32Z" fill="url(#paint0_linear_201_5)"/>
+                  <path d="M19.5 11.5L23 15L19.5 18.5M12.5 11.5L9 15L12.5 18.5M21 22L11 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <defs>
+                    <linearGradient id="paint0_linear_201_5" x1="16" y1="0" x2="16" y2="32" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#6366F1"/>
+                      <stop offset="1" stopColor="#4338CA"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
                 <span className="text-lg font-semibold text-gray-200 group-hover:text-gray-200 transition-colors">
                   MeetSync AI
                 </span>
               </Link>
             </div>
-
             {/* Desktop Menu */}
             <div className="hidden md:flex md:items-center md:gap-2">
               {navigationItems.slice(0, 3).map((item) => (
@@ -122,10 +139,8 @@ function Header() {
                   </span>
                 </Link>
               ))}
-             
-              <InteractiveHoverButton    onClick={() => setIsDialogOpen(true)}>Sign-In</InteractiveHoverButton>
+              <InteractiveHoverButton onClick={() => setIsDialogOpen(true)}>Sign-In</InteractiveHoverButton>
             </div>
-
             {/* Mobile Menu Button */}
             <div className="flex items-center md:hidden">
               <Button
@@ -176,7 +191,6 @@ function Header() {
           </div>
         </SheetContent>
       </Sheet>
-
       <SignInDialog />
     </>
   );
