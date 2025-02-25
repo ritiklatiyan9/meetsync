@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Peer from 'peerjs';
 import { create } from 'zustand';
 import { Video as VideoIcon, Copy, Mic, MicOff, Camera, CameraOff, PhoneOff } from 'lucide-react';
@@ -12,6 +12,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 const CLOUDINARY_CLOUD_NAME = 'dfnxjk10i';
 const CLOUDINARY_API_KEY = '891193764188835';
 const CLOUDINARY_API_SECRET = 's9y3AkhTAu7XR9u_c67n1KUy2_o';
+
+const user = {
+  role: 'admin'
+};
 
 // Zustand Store
 const useStore = create((set) => ({
@@ -49,6 +53,7 @@ const useStore = create((set) => ({
   }),
 }));
 
+
 // Home Component
 const Home = () => {
   const [name, setName] = useState('');
@@ -70,6 +75,17 @@ const Home = () => {
     setUserName(name);
   };
 
+  let user = { role: null }; // Default value
+try {
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    user = JSON.parse(storedUser);
+  }
+} catch (error) {
+  console.error("Error parsing user data:", error);
+}
+ 
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-black">
       <Card className="w-[350px] bg-gray-900 text-white shadow-2xl rounded-xl border border-gray-700">
@@ -85,12 +101,13 @@ const Home = () => {
               className="bg-gray-800 text-white placeholder-gray-400 border-gray-700"
             />
             <div className="flex flex-col space-y-1.5">
-              <Button 
-                onClick={createRoom}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-              >
-                Create New Meeting
-              </Button>
+             <Button
+  disabled={user.role !== 'admin'} // Disable if role is not 'admin'
+  onClick={createRoom}
+  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+>
+  Create New Meeting
+</Button>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-gray-700" />
@@ -124,16 +141,18 @@ const MeetingPage = () => {
   const { isAdmin, roomId, userName, participants, localPeerId, 
     addParticipant, removeParticipant, reset, setLocalPeerId,
     streams, addStream } = useStore();
-const [localStream, setLocalStream] = useState(null);
-const [isRecording, setIsRecording] = useState(false);
-const [isMuted, setIsMuted] = useState(false);
-const [isVideoOff, setIsVideoOff] = useState(false);
-const [uploadUrl, setUploadUrl] = useState(null);
-const peerRef = useRef(null);
-const connectionsRef = useRef([]);
-const mediaRecorderRef = useRef(null);
-const recordedChunks = useRef([]);
-
+  const [localStream, setLocalStream] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [processingStep, setProcessingStep] = useState('');
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [uploadUrl, setUploadUrl] = useState(null);
+  const peerRef = useRef(null);
+  const connectionsRef = useRef([]);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunks = useRef([]);
   // Cloudinary Functions
   const computeSHA1 = async (message) => {
     const encoder = new TextEncoder();
@@ -160,15 +179,156 @@ const recordedChunks = useRef([]);
         { method: 'POST', body: formData }
       );
       
-      const data = await response.json();
-      return data.secure_url;
+      return await response.json();
     } catch (error) {
       console.error("Upload failed:", error);
       return null;
     }
-  };
+  }
 
-  // Media Handling
+
+  const startAutoProcessing = useCallback(async (videoUrl) => {
+    setShowProcessingModal(true);
+    let transcriptText = '';
+    let summaryText = '';
+    let meetingTitle = '';
+    
+    try {
+      // Step 1: Transcribe with AssemblyAI
+      setProcessingStep('Starting transcription...');
+      setProcessingProgress(10);
+      
+      const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'a4bcecf25bbd4dd5949fe2721ec15d8a',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          audio_url: videoUrl,
+          speaker_labels: true,
+          language_code: 'en_us'
+        })
+      });
+  
+      if (!transcriptResponse.ok) throw new Error('Transcription failed to start');
+      
+      const { id } = await transcriptResponse.json();
+      let transcriptResult;
+      let attempts = 0;
+      const maxAttempts = 30;
+  
+      // Poll for transcription completion
+      while (attempts < maxAttempts) {
+        setProcessingStep(`Transcribing (${attempts}/${maxAttempts})...`);
+        setProcessingProgress(10 + Math.floor((attempts / maxAttempts) * 50));
+        
+        const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${id}`, {
+          headers: { 'Authorization': 'a4bcecf25bbd4dd5949fe2721ec15d8a' }
+        });
+        
+        transcriptResult = await pollResponse.json();
+        
+        if (transcriptResult.status === 'completed') break;
+        if (transcriptResult.status === 'error') throw new Error(transcriptResult.error);
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+      }
+  
+      if (attempts === maxAttempts) throw new Error('Transcription timed out');
+      
+      // Format transcript for better readability
+      transcriptText = transcriptResult.utterances
+        ? transcriptResult.utterances
+            .map(utterance => `Speaker ${utterance.speaker}: ${utterance.text}`)
+            .join('\n\n')
+        : transcriptResult.text;
+      
+      // Step 2: Generate Summary with Gemini
+      setProcessingStep('Generating summary...');
+      setProcessingProgress(70);
+      
+      const summaryResponse = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCEn0b9Ilfz8fouSI6iHYuunBJTEEiWGec',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Generate a detailed meeting summary from this transcript. First, create a brief, descriptive title for this meeting. Then provide a comprehensive summary highlighting key decisions, action items, and main discussion points. Format your response as follows:
+                TITLE: [Meeting Title]
+                
+                SUMMARY:
+                [Your detailed summary]
+                
+                Transcript:
+                ${transcriptText}`
+              }]
+            }]
+          })
+        }
+      );
+  
+      if (!summaryResponse.ok) throw new Error('Summary generation failed');
+      
+      const summaryData = await summaryResponse.json();
+      const fullResponse = summaryData.candidates[0].content.parts[0].text;
+      
+      // Extract title and summary
+      const titleMatch = fullResponse.match(/TITLE:\s*(.*?)(?:\n|\r|$)/);
+      meetingTitle = titleMatch ? titleMatch[1].trim() : `Meeting ${new Date().toLocaleDateString()}`;
+      
+      const summaryStartIndex = fullResponse.indexOf('SUMMARY:');
+      if (summaryStartIndex !== -1) {
+        summaryText = fullResponse.substring(summaryStartIndex + 8).trim();
+      } else {
+        summaryText = fullResponse;
+      }
+      
+      // Step 3: Save to database
+      setProcessingStep('Saving meeting data...');
+      setProcessingProgress(90);
+      
+      const saveMeetingResponse = await fetch('http://localhost:8000/api/v1/meeting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: meetingTitle,
+          videoUrl: videoUrl,
+          transcribe: transcriptText,
+          summary: summaryText
+        })
+      });
+      
+      if (!saveMeetingResponse.ok) {
+        const errorData = await saveMeetingResponse.json();
+        throw new Error(`Failed to save meeting: ${errorData.message || 'Unknown error'}`);
+      }
+      
+      const savedData = await saveMeetingResponse.json();
+      console.log('Meeting saved successfully:', savedData);
+      
+      setProcessingStep('Processing complete!');
+      setProcessingProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Set upload URL for reference
+      setUploadUrl(videoUrl);
+      
+    } catch (error) {
+      console.error("Processing error:", error);
+      setProcessingStep(`Error: ${error.message}`);
+      setProcessingProgress(0);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    } finally {
+      setShowProcessingModal(false);
+    }
+  }, []);
+
   const startRecording = async () => {
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -177,26 +337,10 @@ const recordedChunks = useRef([]);
       });
       const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const audioContext = new AudioContext();
-      const destination = audioContext.createMediaStreamDestination();
-
-      if (displayStream.getAudioTracks().length > 0) {
-        const displayAudioSource = audioContext.createMediaStreamSource(
-          new MediaStream(displayStream.getAudioTracks())
-        );
-        displayAudioSource.connect(destination);
-      }
-
-      if (micStream.getAudioTracks().length > 0) {
-        const micAudioSource = audioContext.createMediaStreamSource(
-          new MediaStream(micStream.getAudioTracks())
-        );
-        micAudioSource.connect(destination);
-      }
-
-      const combinedStream = new MediaStream();
-      displayStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
-      destination.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+      const combinedStream = new MediaStream([
+        ...displayStream.getVideoTracks(),
+        ...micStream.getAudioTracks()
+      ]);
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm; codecs=vp9') 
         ? 'video/webm; codecs=vp9' 
@@ -211,9 +355,10 @@ const recordedChunks = useRef([]);
 
       mediaRecorderRef.current.onstop = async () => {
         const blob = new Blob(recordedChunks.current, { type: mimeType });
-        const url = await uploadVideoToCloudinary(blob);
-        setUploadUrl(url);
-        recordedChunks.current = [];
+        const cloudinaryResponse = await uploadVideoToCloudinary(blob);
+        if (cloudinaryResponse?.secure_url) {
+          await startAutoProcessing(cloudinaryResponse.secure_url);
+        }
       };
 
       mediaRecorderRef.current.start(1000);
@@ -229,6 +374,7 @@ const recordedChunks = useRef([]);
       setIsRecording(false);
     }
   };
+
 
   const toggleMute = () => {
     if (localStream) {
@@ -457,6 +603,28 @@ const recordedChunks = useRef([]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-6">
+       {showProcessingModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl p-8 w-full max-w-md space-y-4">
+            <h3 className="text-xl font-semibold text-white text-center">
+              Generating Meeting Minutes
+            </h3>
+            
+            <div className="space-y-2">
+              <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-purple-600 transition-all duration-300"
+                  style={{ width: `${processingProgress}%` }}
+                />
+              </div>
+              <p className="text-gray-300 text-sm text-center">
+                {processingStep} ({Math.round(processingProgress)}%)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8 mt-20">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-800/50 rounded-xl p-4">
@@ -494,9 +662,13 @@ const recordedChunks = useRef([]);
       {/* Recording URL */}
       {uploadUrl && (
         <div className="max-w-7xl mx-auto mb-8">
+           <div className="bg-gray-800/50 rounded-xl p-4 border border-green-500/20">
+           <span><h2>Your Meeting has Been Saved In Your Organisation Database</h2></span>
+          </div>
           <div className="bg-gray-800/50 rounded-xl p-4 border border-green-500/20">
             <p className="text-green-400 flex items-center">
               <span className="font-semibold mr-2">Recording saved:</span>
+             
               <a 
                 href={uploadUrl} 
                 target="_blank" 

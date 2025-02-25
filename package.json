@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.22.0",
+    "@heroicons/react": "^2.2.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-label": "^2.1.2",
@@ -25,6 +26,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "googleapis": "^144.0.0",
+    "jwt-decode": "^4.0.0",
     "lamejs": "^1.2.1",
     "locomotive-scroll": "^4.1.4",
     "lucide-react": "^0.475.0",

@@ -153,9 +153,9 @@ const Organisation = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-20">
+    <div className="min-h-screen bg-gray-900 text-white p-4  md:p-20">
       {/* Add User Button */}
-      <Button onClick={() => setIsAddUserModalOpen(true)} className="mb-6 bg-green-600 hover:bg-green-700 text-white">
+      <Button onClick={() => setIsAddUserModalOpen(true)} className=" bg-green-600 md:mt-0 mt-16 p-4 mb-2 hover:bg-green-700 text-white">
         Add User
       </Button>
 
