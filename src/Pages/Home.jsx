@@ -72,9 +72,9 @@ function Home() {
     locomotiveScroll.current = new LocomotiveScroll({
       el: scrollRef.current,
       smooth: true,
-      multiplier: 0.8,
+      multiplier: 0.7, // Reduced from 0.8 for smoother scrolling
       class: 'is-inview',
-      lerp: 0.05,
+      lerp: 0.08, // Reduced from 0.05 for smoother scrolling
       smartphone: {
         smooth: false,
         breakpoint: 767
@@ -129,31 +129,8 @@ function Home() {
     </div>
   );
 
-  const TestimonialCard = ({ name, role, quote, avatar, delay }) => (
-    <div 
-      className="relative group"
-      data-scroll={!isMobile ? true : undefined}
-      data-scroll-speed={!isMobile ? "0.3" : undefined}
-    >
-      <div className="relative p-6 md:p-8 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 transition-all duration-500 ease-out hover:scale-[1.02] hover:bg-white/10">
-        <div className="flex items-center mb-4 md:mb-6">
-          <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 flex items-center justify-center text-xl font-bold">
-            {name.charAt(0)}
-          </div>
-          <div className="ml-4">
-            <h4 className="text-lg md:text-xl font-semibold">{name}</h4>
-            <p className="text-sm text-gray-400">{role}</p>
-          </div>
-        </div>
-        <p className="text-sm md:text-base text-gray-300 italic">{quote}</p>
-      </div>
-    </div>
-  );
-
   return (
     <>
-      
-      
       {/* Progress Bar */}
       <div 
         className="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 z-50 transition-all duration-300" 
@@ -173,20 +150,20 @@ function Home() {
           <div 
             className="absolute w-64 h-64 md:w-96 md:h-96 bg-blue-500/20 rounded-full blur-3xl -top-32 -left-32 md:-top-48 md:-left-48 animate-pulse"
             data-scroll
-            data-scroll-speed="2"
+            data-scroll-speed="1" // Reduced from 2 for smoother scrolling
             data-scroll-direction="horizontal"
           />
           <div 
             className="absolute w-64 h-64 md:w-96 md:h-96 bg-purple-500/20 rounded-full blur-3xl -bottom-32 -right-32 md:-bottom-48 md:-right-48 animate-pulse delay-700"
             data-scroll
-            data-scroll-speed="1.5"
+            data-scroll-speed="0.8" // Reduced from 1.5 for smoother scrolling
             data-scroll-direction="horizontal"
           />
           <div className="relative z-10 max-w-5xl mx-auto text-center">
             <div 
               className="inline-flex items-center px-4 py-2 md:px-6 md:py-3 mb-8 md:mb-12 rounded-full border border-white/20 bg-white/10 backdrop-blur-xl hover:bg-white/15 transition-all duration-300"
               data-scroll
-              data-scroll-speed="0.5"
+              data-scroll-speed="0.3" // Reduced from 0.5 for smoother scrolling
             >
               <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3 text-blue-400 animate-pulse" />
               <span className="text-sm md:text-base font-medium">AI-Powered Meetings</span>
@@ -194,14 +171,14 @@ function Home() {
             <h1 
               className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 md:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-400 to-purple-400"
               data-scroll
-              data-scroll-speed="0.2"
+              data-scroll-speed="0.1" // Reduced from 0.2 for smoother scrolling
             >
               MeetSync AI
             </h1>
             <p 
               className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed"
               data-scroll
-              data-scroll-speed="0.7"
+              data-scroll-speed="0.4" // Reduced from 0.7 for smoother scrolling
             >
               Transform your meetings with AI-powered insights and seamless collaboration
             </p>
@@ -210,7 +187,7 @@ function Home() {
                 className="text-black shadow-xs shadow-slate-100 text-sm md:text-base w-full md:w-auto"
                 onClick={handleGetStarted}
                 data-scroll
-                data-scroll-speed="0.8"
+                data-scroll-speed="0.5" // Reduced from 0.8 for smoother scrolling
               >
                 Get Started
               </InteractiveHoverButton>
@@ -219,7 +196,7 @@ function Home() {
                 variant="outline" 
                 className="w-full md:w-auto border-white/20 bg-white/5 hover:bg-white/10 hover:text-white backdrop-blur-md"
                 data-scroll
-                data-scroll-speed="0.8"
+                data-scroll-speed="0.5" // Reduced from 0.8 for smoother scrolling
               >
                 Learn More
                 <ChevronDown className="ml-2 h-4 w-4 animate-bounce" />
@@ -243,19 +220,19 @@ function Home() {
               icon={Users} 
               title="Active Users" 
               value="10,000+" 
-              speed="0.2" 
+              speed="0.1" // Reduced from 0.2 for smoother scrolling
             />
             <StatsCard 
               icon={Video} 
               title="Meetings Hosted" 
               value="50,000+" 
-              speed="0.3" 
+              speed="0.15" // Reduced from 0.3 for smoother scrolling
             />
             <StatsCard 
               icon={Clock} 
               title="Hours Saved" 
               value="125,000+" 
-              speed="0.4" 
+              speed="0.2" // Reduced from 0.4 for smoother scrolling
             />
           </div>
         </section>
@@ -269,27 +246,23 @@ function Home() {
               <p className="max-w-2xl mx-auto text-gray-400 text-lg">Our AI-powered platform enhances your meeting experience with cutting-edge tools</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              
-              
               <FeatureCard
                 icon={Shield}
                 title="Secure Platform"
                 description="Enterprise-grade security with end-to-end encryption for all your confidential meetings and data"
-                speed="0.5"
+                speed="0.25" // Reduced from 0.5 for smoother scrolling
               />
-              
-              
               <FeatureCard
                 icon={Clock}
                 title="Time Management"
                 description="Keep meetings on track with intelligent time allocation and agenda monitoring features"
-                speed="0.4"
+                speed="0.2" // Reduced from 0.4 for smoother scrolling
               />
               <FeatureCard
                 icon={Video}
                 title="HD Video Conferencing"
                 description="Crystal clear audio and video with adaptive streaming technology for any connection"
-                speed="0.6"
+                speed="0.3" // Reduced from 0.6 for smoother scrolling
               />
             </div>
           </div>
@@ -303,7 +276,7 @@ function Home() {
               <div 
                 className="space-y-6 md:space-y-8"
                 data-scroll
-                data-scroll-speed="0.8"
+                data-scroll-speed="0.4" // Reduced from 0.8 for smoother scrolling
               >
                 <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium">SEE IT IN ACTION</span>
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
@@ -343,7 +316,7 @@ function Home() {
               <div 
                 className="relative aspect-video group"
                 data-scroll
-                data-scroll-speed="0.8"
+                data-scroll-speed="0.4" // Reduced from 0.8 for smoother scrolling
               >
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="relative h-full rounded-2xl md:rounded-3xl bg-black/50 border border-white/10 backdrop-blur-lg overflow-hidden transition-all duration-500 hover:scale-[0.98]">
@@ -362,33 +335,9 @@ function Home() {
           </div>
         </section>
 
-        {/* Testimonials */}
-        <section id="testimonials" className="py-16 md:py-32 relative" data-scroll-section>
-          <div className="max-w-6xl mx-auto px-4 md:px-8">
-            <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1 rounded-full bg-white/10 text-sm text-blue-400 font-medium mb-4">TESTIMONIALS</span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">What Our Users Say</h2>
-              <p className="max-w-2xl mx-auto text-gray-400 text-lg">Join thousands of satisfied customers who have transformed their meeting experience</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            
-              <TestimonialCard
-                name="Asit Upadhyay"
-                role="Tech Lead"
-                quote="The meeting analytics help us identify patterns and inefficiencies we never noticed before. Our meetings are now 40% shorter and twice as productive."
-              />
-           
-            </div>
-          </div>
-        </section>
-
-      
+        {/* Footer placeholder - you may want to add a proper footer here */}
+       
       </main>
-
-      {/* Footer */}
-     
-
-     
 
       {/* Custom CSS for animations */}
       <style jsx>{`
