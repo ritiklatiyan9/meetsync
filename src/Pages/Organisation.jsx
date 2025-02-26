@@ -146,7 +146,7 @@ const Organisation = () => {
   const handleDelete = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`https://meetsync-backend.vercel.app/api/v1/users/deleteuser/${deleteUserId}`, {
+      const response = await fetch(`https://meetsync-backend.vercel.app/api/v1/users/deleteuserbyid/${deleteUserId}`, {
         method: 'DELETE',
       });
 

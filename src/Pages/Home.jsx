@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FlipText } from "../components/magicui/flip-text";
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Star, Zap, Shield, Video, Users, Clock, ChevronDown } from 'lucide-react';
+import { Sparkles, ArrowRight, Star, Zap, Shield, Video, Users, Clock, ChevronDown   } from 'lucide-react';
 import { SpinningText } from "../components/magicui/spinning-text";
 import { InteractiveHoverButton } from "../components/magicui/interactive-hover-button";
 import LocomotiveScroll from 'locomotive-scroll';
 import 'locomotive-scroll/dist/locomotive-scroll.css';
 import { SparklesText } from "../components/magicui/sparkles-text";
+import pic from '../assets/pic.png';
 
 import { PointerWrapper } from "../components/magicui/pointer";
 import {
@@ -75,7 +76,7 @@ function Home() {
     locomotiveScroll.current = new LocomotiveScroll({
       el: scrollRef.current,
       smooth: true,
-      multiplier: 0.7, // Reduced from 0.8 for smoother scrolling
+      multiplier: 3, // Reduced from 0.8 for smoother scrolling
       class: 'is-inview',
       lerp: 0.08, // Reduced from 0.05 for smoother scrolling
       smartphone: {
@@ -223,19 +224,19 @@ function Home() {
             <StatsCard 
               icon={Users} 
               title="Active Users" 
-              value="10,000+" 
+              value="50+" 
               speed="0.1" // Reduced from 0.2 for smoother scrolling
             />
             <StatsCard 
               icon={Video} 
               title="Meetings Hosted" 
-              value="50,000+" 
+              value="200+" 
               speed="0.15" // Reduced from 0.3 for smoother scrolling
             />
             <StatsCard 
               icon={Clock} 
               title="Hours Saved" 
-              value="125,000+" 
+              value="20+" 
               speed="0.2" // Reduced from 0.4 for smoother scrolling
             />
           </div>
@@ -322,19 +323,11 @@ function Home() {
                 data-scroll
                 data-scroll-speed="0.4" // Reduced from 0.8 for smoother scrolling
               >
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500/30 rounded-3xl blur-xs opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative h-full rounded-2xl md:rounded-3xl bg-black/50 border border-white/10 backdrop-blur-lg overflow-hidden transition-all duration-500 hover:scale-[0.98]">
-                  <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
-                    <div className="text-center">
-                      <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-lg flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-500 cursor-pointer">
-                        <Video className="w-8 h-8 text-white" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold mt-6 mb-2 md:mb-4">Live Demo</h3>
-                      <p className="text-sm md:text-base text-gray-400">Experience the future of AI-powered meetings</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+               <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500/30 rounded-3xl blur-xs opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
+<div className="relative h-full rounded-2xl md:rounded-3xl bg-black/50 border border-white/10 backdrop-blur-lg overflow-hidden transition-all duration-500 hover:scale-[0.98]">
+  <img src={pic} alt="" className="w-full h-full object-cover" />
+</div>
+ </div>
             </div>
           </div>
         </section>
