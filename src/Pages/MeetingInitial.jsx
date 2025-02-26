@@ -696,15 +696,20 @@ const MeetingPage = () => {
 
           <div className="flex items-center space-x-3">
             {isAdmin && (
-              <Button
-                variant={isRecording ? "destructive" : "default"}
-                size="sm"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                onClick={isRecording ? stopRecording : startRecording}
-              >
-                <VideoIcon className="h-4 w-4 mr-2" />
-                {isRecording ? "Stop Recording" : "Start Recording"}
-              </Button>
+             <Button
+             variant={isRecording ? "destructive" : "default"}
+             size="sm"
+             className={`transition-all duration-300 ${
+               isRecording
+                 ? "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900"
+                 : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+             }`}
+             onClick={isRecording ? stopRecording : startRecording}
+           >
+             <VideoIcon className="h-4 w-4 mr-2" />
+             {isRecording ? "Stop Recording" : "Start Recording"}
+           </Button>
+           
             )}
           </div>
         </div>
@@ -715,10 +720,10 @@ const MeetingPage = () => {
         <div className="max-w-7xl mx-auto mb-8">
           <div className="bg-gray-800/50 rounded-xl p-4 border border-green-500/20">
             <span>
-              <h2>Your Meeting has Been Saved In Your Organisation Database</h2>
+              <h2 className="text-white m-2 ">Your Meeting has Been Saved In Your Organisation Database</h2>
             </span>
           </div>
-          <div className="bg-gray-800/50 rounded-xl p-4 border border-green-500/20">
+          <div className="bg-gray-800/50 mt-2 rounded-xl p-4 border border-green-500/20">
             <p className="text-green-400 flex items-center">
               <span className="font-semibold mr-2">Recording saved:</span>
 
@@ -981,12 +986,12 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
 
   return (
     <Card className="bg-gray-800/50 border-gray-700">
-      <CardHeader>
+      {/* <CardHeader>
         <CardTitle className="text-white">Video to Text Conversion</CardTitle>
-      </CardHeader>
+      </CardHeader> */}
       <CardContent>
         <div className="flex flex-col space-y-4">
-          <div className="flex gap-4">
+          {/* <div className="flex gap-4">
             <Input
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
@@ -1000,7 +1005,7 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
             >
               {loading ? "Converting..." : "Convert to Text"}
             </Button>
-          </div>
+          </div> */}
 
           {error && (
             <div className="text-red-500 bg-red-500/10 p-3 rounded-lg">
@@ -1008,7 +1013,7 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
             </div>
           )}
 
-          {transcript && (
+          {/* {transcript && (
             <div className="space-y-4">
               <div className="bg-gray-900 text-gray-200 p-4 rounded-lg whitespace-pre-wrap max-h-96 overflow-y-auto">
                 {transcript}
@@ -1064,7 +1069,7 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
                 </div>
               )}
             </div>
-          )}
+          )} */}
         </div>
       </CardContent>
     </Card>

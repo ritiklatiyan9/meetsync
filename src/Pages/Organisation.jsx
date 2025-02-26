@@ -213,12 +213,12 @@ const Organisation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 text-white p-6 md:p-8">
       {/* Header with Organization name */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 mt-12">
         <div className="flex items-center">
           <Building2 className="h-8 w-8 mr-3 text-purple-500" />
-          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+          <h1 className="text-2xl mt-2 md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
             Organization Dashboard
           </h1>
         </div>
@@ -232,137 +232,146 @@ const Organisation = () => {
         </Button>
       </div>
 
-      {/* Meetings Section */}
-      <Card className="bg-gray-850 border-0 shadow-xl rounded-xl mb-8 overflow-hidden backdrop-blur-sm bg-opacity-95 bg-gray-800/60">
-        <CardHeader className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700/50">
-          <div className="flex items-center">
-            <Video className="h-5 w-5 mr-2 text-purple-500" />
-            <CardTitle className="text-xl font-bold text-white">Recent Meetings</CardTitle>
-          </div>
-          <CardDescription className="text-gray-400">
-            Your organization's most recent meetings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
-          {meetings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {meetings.map((meeting) => (
-                <Card 
-                  key={meeting._id} 
-                  className="bg-gray-800/70 border border-gray-700/50 rounded-xl overflow-hidden h-full flex flex-col transition-all duration-200 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-900/20"
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg font-semibold text-white line-clamp-1">
-                        {meeting.title}
-                      </CardTitle>
-                    </div>
-                    <CardDescription className="flex items-center text-gray-400 text-xs">
-                      <Calendar className="h-3 w-3 mr-1 text-purple-400" />
-                      {formatDate(meeting.createdAt)}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="py-2">
-                    <div className="flex items-center text-gray-300 text-sm mb-2">
-                      <Link2 className="h-4 w-4 mr-2 flex-shrink-0 text-blue-400" />
-                      <p className="overflow-hidden truncate text-ellipsis">
-                        {meeting.videoUrl}
-                      </p>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="pt-2 mt-auto">
-                    <Button 
-                      onClick={() => navigate(`/share/${meeting._id}`)}
-                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-md hover:shadow-indigo-500/20 transition-all duration-200"
-                      size="sm"
-                    >
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100vh-180px)]">
+        {/* Meetings Section - Left Side */}
+        <Card className="bg-gray-850 border-0 shadow-xl rounded-xl overflow-hidden backdrop-blur-sm bg-opacity-95 bg-gray-800/60 flex flex-col">
+          <CardHeader className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700/50">
+            <div className="flex items-center">
+              <Video className="h-5 w-5 mr-2 text-purple-500" />
+              <CardTitle className="text-xl font-bold text-white">Recent Meetings</CardTitle>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <Video className="h-12 w-12 text-gray-500 mb-3" />
-              <p className="text-gray-400 mb-2">No meetings available.</p>
-              <Button className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-500">
-                Schedule a Meeting
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Users Section */}
-      <Card className="bg-gray-850 border-0 shadow-xl rounded-xl overflow-hidden backdrop-blur-sm bg-opacity-95 bg-gray-800/60">
-        <CardHeader className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700/50">
-          <div className="flex items-center">
-            <Users className="h-5 w-5 mr-2 text-purple-500" />
-            <CardTitle className="text-xl font-bold text-white">Organization Members</CardTitle>
-          </div>
-          <CardDescription className="text-gray-400">
-            Manage your team members and their access
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-800/50 hover:bg-gray-800/70">
-                  <TableHead className="text-gray-300 font-medium">Name</TableHead>
-                  <TableHead className="text-gray-300 font-medium">Email</TableHead>
-                  <TableHead className="text-gray-300 font-medium">Mobile</TableHead>
-                  <TableHead className="text-gray-300 font-medium">Role</TableHead>
-                  <TableHead className="text-gray-300 font-medium">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow 
-                    key={user._id} 
-                    className="border-gray-700/50 hover:bg-gray-800/50 transition-colors"
+            <CardDescription className="text-gray-400">
+              Your organization's most recent meetings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 flex-1 overflow-y-auto">
+            {meetings.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {meetings.map((meeting) => (
+                  <Card 
+                    key={meeting._id} 
+                    className="bg-gray-800/70 border border-gray-700/50 rounded-xl overflow-hidden transition-all duration-200 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-900/20"
                   >
-                    <TableCell className="text-gray-200 font-medium">{user.name}</TableCell>
-                    <TableCell className="text-gray-200">{user.email}</TableCell>
-                    <TableCell className="text-gray-200">{user.mobile}</TableCell>
-                    <TableCell>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.role === 'admin' 
-                          ? 'bg-blue-900/30 text-blue-400' 
-                          : 'bg-green-900/30 text-green-400'
-                      }`}>
-                        {user.role}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={() => setEditUser(user)}
-                          className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md hover:shadow-blue-500/20 transition-all duration-200"
-                          size="sm"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() => setDeleteUserId(user._id)}
-                          className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md hover:shadow-red-500/20 transition-all duration-200"
-                          size="sm"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg font-semibold text-white line-clamp-1">
+                          {meeting.title}
+                        </CardTitle>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                      <CardDescription className="flex items-center text-gray-400 text-xs">
+                        <Calendar className="h-3 w-3 mr-1 text-purple-400" />
+                        {formatDate(meeting.createdAt)}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="py-2">
+                      <div className="flex items-center text-gray-300 text-sm mb-2">
+                        <Link2 className="h-4 w-4 mr-2 flex-shrink-0 text-blue-400" />
+                        <p className="overflow-hidden truncate text-ellipsis">
+                          {meeting.videoUrl}
+                        </p>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-2">
+                      <Button 
+                        onClick={() => navigate(`/share/${meeting._id}`)}
+                        className="w-32 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-md hover:shadow-indigo-500/20 transition-all duration-200"
+                        size="sm"
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                    </CardFooter>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                <Video className="h-12 w-12 text-gray-500 mb-3" />
+                <p className="text-gray-400 mb-2">No meetings available.</p>
+                <Button className="mt-2 bg-gradient-to-r from-indigo-500 to-purple-500">
+                  Schedule a Meeting
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Users Section - Right Side */}
+        <Card className="bg-gray-850 border-0 shadow-xl rounded-xl overflow-hidden backdrop-blur-sm bg-opacity-95 bg-gray-800/60 flex flex-col">
+          <CardHeader className="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700/50">
+            <div className="flex items-center">
+              <Users className="h-5 w-5 mr-2 text-purple-500" />
+              <CardTitle className="text-xl font-bold text-white">Organization Members</CardTitle>
+            </div>
+            <CardDescription className="text-gray-400">
+              Manage your team members and their access
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 flex-1 overflow-hidden">
+            <div className="h-full flex flex-col">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-gray-800/50 z-10">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-gray-300 font-medium">Name</TableHead>
+                      <TableHead className="text-gray-300 font-medium">Email</TableHead>
+                      <TableHead className="text-gray-300 font-medium">Mobile</TableHead>
+                      <TableHead className="text-gray-300 font-medium">Role</TableHead>
+                      <TableHead className="text-gray-300 font-medium">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <Table>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow 
+                        key={user._id} 
+                        className="border-gray-700/50 hover:bg-gray-800/50 transition-colors"
+                      >
+                        <TableCell className="text-gray-200 font-medium">{user.name}</TableCell>
+                        <TableCell className="text-gray-200">{user.email}</TableCell>
+                        <TableCell className="text-gray-200">{user.mobile}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            user.role === 'admin' 
+                              ? 'bg-blue-900/30 text-blue-400' 
+                              : 'bg-green-900/30 text-green-400'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={() => setEditUser(user)}
+                              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md hover:shadow-blue-500/20 transition-all duration-200"
+                              size="sm"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={() => setDeleteUserId(user._id)}
+                              className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md hover:shadow-red-500/20 transition-all duration-200"
+                              size="sm"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <Dialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
