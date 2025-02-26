@@ -47,9 +47,9 @@ const LoginPage = () => {
         <div className="p-8 space-y-6">
           <div className="flex flex-col items-center gap-2">
             <LockKeyhole className="h-8 w-8 text-indigo-500" />
-            <h1 className="text-2xl font-bold text-gray-100">Welcome Back</h1>
+            <h1 className="text-2xl font-bold text-gray-100">Welcome to MeetSync AI</h1>
             <p className="text-gray-400 text-center">
-              Sign in to your admin account
+              Sign in to your account
             </p>
           </div>
 
@@ -64,7 +64,7 @@ const LoginPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@example.com"
+                  placeholder="Enter Your Email"
                   className="bg-gray-800 border-gray-700 text-gray-100 focus:ring-indigo-500"
                   required
                 />

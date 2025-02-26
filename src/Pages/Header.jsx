@@ -1,7 +1,14 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, MessageCircle, Home, Menu, LogOut, Building } from "lucide-react"; // Import Building icon for Organization
+import {
+  Calendar,
+  MessageCircle,
+  Home,
+  Menu,
+  LogOut,
+  Building,
+} from "lucide-react"; // Import Building icon for Organization
 import {
   Sheet,
   SheetContent,
@@ -28,35 +35,36 @@ function Header() {
       }
       setLastScrollY(currentScrollY);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Dynamically define navigation items based on login status
   const baseNavigationItems = [
-    { to: "/", icon: Home, label: "Home" },
-    { to: "/meeting", icon: Calendar, label: "Meeting" },
-    { to: "/contact", icon: MessageCircle, label: "Contact" },
+    { to: "/", icon: Home, label: "Home", color: "#4A90E2" }, // Blue
+    { to: "/meeting", icon: Calendar, label: "Meeting", color: "#50E3C2" }, // Green
+    { to: "/contact", icon: MessageCircle, label: "Contact", color: "#F5A623" }, // Orange
   ];
 
   const loggedInNavigationItems = [
     ...baseNavigationItems,
-    { to: "/org", icon: Building, label: "Organization" }, // Add Organization link
+    { to: "/org", icon: Building, label: "Organization", color: "#BD10E0" }, // Purple
   ];
 
-  const navigationItems = isLoggedIn ? loggedInNavigationItems : baseNavigationItems;
+  const navigationItems = isLoggedIn
+    ? loggedInNavigationItems
+    : baseNavigationItems;
 
   // Handle logout
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
     <>
       <header
         className={`fixed top-0 w-full z-50 transition-transform duration-300 ${
-          headerVisible ? 'translate-y-0' : '-translate-y-full'
+          headerVisible ? "translate-y-0" : "-translate-y-full"
         }`}
         style={{
           background: "rgba(255, 255, 255, 0.1)",
@@ -68,17 +76,30 @@ function Header() {
           <div className="flex justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link 
-                to="/" 
-                className="flex items-center gap-2 relative group"
-              >
+              <Link to="/" className="flex items-center gap-2 relative group">
                 <svg className="w-7 h-7" viewBox="0 0 32 32" fill="none">
-                  <path d="M16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32Z" fill="url(#paint0_linear_201_5)"/>
-                  <path d="M19.5 11.5L23 15L19.5 18.5M12.5 11.5L9 15L12.5 18.5M21 22L11 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32Z"
+                    fill="url(#paint0_linear_201_5)"
+                  />
+                  <path
+                    d="M19.5 11.5L23 15L19.5 18.5M12.5 11.5L9 15L12.5 18.5M21 22L11 12"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                   <defs>
-                    <linearGradient id="paint0_linear_201_5" x1="16" y1="0" x2="16" y2="32" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#6366F1"/>
-                      <stop offset="1" stopColor="#4338CA"/>
+                    <linearGradient
+                      id="paint0_linear_201_5"
+                      x1="16"
+                      y1="0"
+                      x2="16"
+                      y2="32"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop stopColor="#6366F1" />
+                      <stop offset="1" stopColor="#4338CA" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -93,10 +114,11 @@ function Header() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className="px-3 py-2 text-sm font-medium text-gray-200 hover:text-gray-900 hover:bg-gray-50/80 rounded-full transition-colors"
+                  className="px-3 py-2 text-sm font-medium text-gray-200   hover:bg-gray-700/60 hover:text-white rounded-full transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <item.icon className="w-4 h-4" />
+                    <item.icon className="w-4 h-4" color={item.color} />{" "}
+                    {/* Apply unique color */}
                     {item.label}
                   </span>
                 </Link>
@@ -107,30 +129,34 @@ function Header() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    onClick={() =>
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                    }
                     className="text-gray-200 hover:text-gray-900"
                   >
                     <LogOut className="w-5 h-5" />
                   </Button>
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-10">
-                      <div className="p-4">
-                        <p className="text-sm font-medium text-gray-800">{user?.name}</p>
-                        <p className="text-xs text-gray-500">{user?.email}</p>
-                      </div>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Logout
-                      </button>
-                    </div>
+                  <div className="absolute right-0 mt-2 w-52 bg-black/90 border border-purple-500/50 shadow-xl rounded-lg overflow-hidden z-10 backdrop-blur-lg">
+                  <div className="p-4 space-y-1">
+                    <p className="text-sm font-semibold text-white/90">👤 {user?.name}</p>
+                    <p className="text-xs text-white/70">{user?.email}</p>
+                  </div>
+                  <div className="border-t border-white/10"></div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-700/90 hover:text-white transition-all duration-300"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+                
                   )}
                 </div>
               ) : (
                 <Button
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate("/login")}
                   variant="ghost"
                   className="text-gray-200 hover:text-gray-900"
                 >
@@ -185,7 +211,7 @@ function Header() {
                 <Button
                   onClick={() => {
                     setIsOpen(false);
-                    navigate('/login');
+                    navigate("/login");
                   }}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
                 >
