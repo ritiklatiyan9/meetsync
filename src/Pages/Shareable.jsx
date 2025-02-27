@@ -148,7 +148,7 @@ const Shareable = () => {
       }
 
       toast.success('Meeting summary has been sent successfully');
-      setTimeout(() => navigate('/'), 2000); // Redirect after 2 seconds
+      setTimeout(() => navigate('/org'), 2000); // Redirect after 2 seconds
       setIsDialogOpen(false);
     } catch (err) {
       toast.error(err.message || 'Failed to send email');

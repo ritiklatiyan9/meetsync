@@ -402,10 +402,19 @@ const MeetingPage = () => {
       };
 
       mediaRecorderRef.current.onstop = async () => {
+        // Modal is already visible at this point
+        setProcessingStep("Uploading recording...");
+        setProcessingProgress(10);
+        
         const blob = new Blob(recordedChunks.current, { type: mimeType });
         const cloudinaryResponse = await uploadVideoToCloudinary(blob);
         if (cloudinaryResponse?.secure_url) {
           await startAutoProcessing(cloudinaryResponse.secure_url);
+        } else {
+          // Handle upload failure
+          setProcessingStep("Error: Failed to upload recording");
+          setProcessingProgress(0);
+          setTimeout(() => setShowProcessingModal(false), 3000);
         }
       };
 
@@ -418,10 +427,16 @@ const MeetingPage = () => {
 
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") {
+      // Show processing modal immediately when stopping recording
+      setShowProcessingModal(true);
+      setProcessingStep("Preparing recording...");
+      setProcessingProgress(5);
+      
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
+  
 
   const toggleMute = () => {
     if (localStream) {

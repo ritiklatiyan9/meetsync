@@ -9,6 +9,7 @@ import Login from './Pages/Login'
 import Organisation from './Pages/Organisation';
 import Shareable from './Pages/Shareable';
 
+
 function App() {
   return (
     <AuthProvider>
@@ -22,6 +23,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/share/:meetingId" element={<Shareable />} />
+         
           <Route path="/org" element={<Organisation/>} />
         </Routes>
       </div>
