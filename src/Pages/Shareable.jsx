@@ -60,7 +60,6 @@ const Shareable = () => {
 
         setUsers(usersData.data);
         setMeeting(meetingData.data);
-        // Initialize editedSummary with meeting summary when data is first loaded
         if (meetingData.data && meetingData.data.summary) {
           setEditedSummary(meetingData.data.summary);
         }
@@ -148,7 +147,7 @@ const Shareable = () => {
       }
 
       toast.success('Meeting summary has been sent successfully');
-      setTimeout(() => navigate('/org'), 2000); // Redirect after 2 seconds
+      setTimeout(() => navigate('/org'), 2000);
       setIsDialogOpen(false);
     } catch (err) {
       toast.error(err.message || 'Failed to send email');
@@ -173,7 +172,6 @@ const Shareable = () => {
   };
 
   const openEditDialog = () => {
-    // Set the edited summary to the current meeting summary when opening the dialog
     setEditedSummary(meeting?.summary || '');
     setIsEditDialogOpen(true);
   };
@@ -433,13 +431,13 @@ const Shareable = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div>
+                  <div className="bg-gray-800 p-4 rounded-lg">
                     <h3 className="text-lg font-medium text-gray-200 mb-2">Main Discussion</h3>
                     <p className="text-gray-300 leading-relaxed">{parseSummary(meeting?.summary).main}</p>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
                       <h3 className="text-lg font-medium text-gray-200 mb-2 flex items-center">
                         <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
                         Key Decisions
@@ -455,7 +453,7 @@ const Shareable = () => {
                       )}
                     </div>
                     
-                    <div>
+                    <div className="bg-gray-800 p-4 rounded-lg">
                       <h3 className="text-lg font-medium text-gray-200 mb-2 flex items-center">
                         <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
                         Action Items

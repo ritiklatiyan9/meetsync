@@ -45,6 +45,7 @@ import {
   Building2,
   Loader2
 } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 const Organisation = () => {
   const [meetings, setMeetings] = useState([]);
@@ -129,9 +130,13 @@ const Organisation = () => {
   };
 
   const showToast = (message, type) => {
-    // Simple toast notification using alert for now
-    // In a real app, replace with a toast component
-    alert(message);
+    if (type === 'success') {
+      toast.success(message);
+    } else if (type === 'error') {
+      toast.error(message);
+    } else {
+      toast(message);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -233,6 +238,7 @@ const Organisation = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6 md:p-8">
+      <Toaster richColors />
       {/* Header with Organization name */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 mt-12">
         <div className="flex items-center">
