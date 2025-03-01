@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Calendar, Video, FileText, Mail, Send, Pencil } from "lucide-react";
+import { Calendar, Video, FileText, Mail, Send, Pencil, MessageCircle, Rotate3d } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -325,6 +325,7 @@ const Shareable = () => {
               onClick={() => navigate(`/chat/${meetingId}`)}
               className="bg-blue-600 hover:bg-blue-700 gap-2"
             >
+              <MessageCircle className="w-4 h-4" />
               Chat
             </Button>
             <Button
@@ -546,7 +547,7 @@ const Shareable = () => {
                   variant="ghost"
                   size="sm"
                   onClick={openEditDialog}
-                  className="text-gray-400 hover:text-gray-200"
+                  className="text-gray-400 hover:bg-gray-400     hover:text-gray-900"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit
@@ -625,13 +626,7 @@ const Shareable = () => {
           <CardHeader className="border-b border-gray-800">
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl">Task Assignments</CardTitle>
-              <Button 
-                variant="ghost" 
-                onClick={() => setTaskAssignments([])}
-                className="text-gray-400 hover:text-gray-200"
-              >
-                Refresh
-              </Button>
+              
             </div>
           </CardHeader>
           <CardContent className="pt-6">
@@ -643,7 +638,7 @@ const Shareable = () => {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-gray-800">
+                  <TableRow className="border-b border-gray-800 hover:bg-gray-700">
                     <TableHead className="text-gray-300">Assignee</TableHead>
                     <TableHead className="text-gray-300">Task</TableHead>
                     <TableHead className="text-gray-300">Confidence</TableHead>
@@ -651,7 +646,7 @@ const Shareable = () => {
                 </TableHeader>
                 <TableBody>
                   {taskAssignments.map((assignment, idx) => (
-                    <TableRow key={idx} className="border-b border-gray-800">
+                    <TableRow key={idx} className="border-b border-gray-800 hover:bg-gray-700">
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {assignment.email ? (
@@ -694,7 +689,7 @@ const Shareable = () => {
               <Button
                 variant="ghost"
                 onClick={handleSelectAll}
-                className="text-gray-400 hover:text-gray-200"
+                className="text-gray-400 hover:text-gray-800 hover:bg-gray-400"
               >
                 {selectedEmails.length === users.length
                   ? "Deselect All"
@@ -705,13 +700,13 @@ const Shareable = () => {
           <CardContent className="pt-6">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-800">
+                <TableRow className="border-b border-gray-800 hover:bg-gray-800">
                   <TableHead className="w-8">
                     <input
                       type="checkbox"
                       checked={selectedEmails.length === users.length}
                       onChange={handleSelectAll}
-                      className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
+                      className="w-4 h-4 text-blue-600 bg-gray-700  border-gray-600 rounded"
                     />
                   </TableHead>
                   <TableHead className="text-gray-300">Name</TableHead>
