@@ -27,7 +27,7 @@ const MeetingChat = () => {
     const fetchMeeting = async () => {
       setIsFetchingMeeting(true);
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/meeting/${id}`);
+        const response = await fetch(`https://meetsync-backend.vercel.app/api/v1/meeting/${id}`);
         if (!response.ok) throw new Error("Failed to fetch meeting");
         const data = await response.json();
         setMeetingTitle(data.data.title);
@@ -89,7 +89,7 @@ const MeetingChat = () => {
     setInput("");
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/meeting/${id}/chat`, {
+      const response = await fetch(`https://meetsync-backend.vercel.app/api/v1/meeting/${id}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: input }),

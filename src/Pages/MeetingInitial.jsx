@@ -267,13 +267,15 @@ const Home = () => {
     setUserName(name);
   };
 
-  const joinRoom = () => {
-    if (!name || !roomCode)
-      return alert("Please enter your name and room code");
-    setRoomId(roomCode);
-    setIsAdmin(false);
-    setUserName(name);
-  };
+    const joinRoom = () => {
+      if (!name || !roomCode)
+        return alert("Please enter your name and room code");
+      setRoomId(roomCode);
+      setIsAdmin(false);
+      setUserName(name);
+    };
+
+  
 
   let user = { role: null }; // Default value
   try {
@@ -867,7 +869,7 @@ ${transcriptText}`,
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white hover:bg-gray-900"
                 onClick={() => navigator.clipboard.writeText(roomId)}
               >
                 <Copy className="h-4 w-4" />
