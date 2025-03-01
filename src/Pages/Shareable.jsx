@@ -228,16 +228,25 @@ const Shareable = () => {
       <Toaster richColors />
       
       <div className="max-w-6xl mx-auto mt-12">
+        {/* Updated Header with Chat Button */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-100">Meeting Details</h1>
-          <Button 
-            onClick={() => setIsDialogOpen(true)}
-            disabled={selectedEmails.length === 0}
-            className="bg-blue-600 hover:bg-blue-700 gap-2"
-          >
-            <Mail className="w-4 h-4" />
-            Send Summary ({selectedEmails.length})
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              onClick={() => navigate(`/chat/${meetingId}`)}
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
+            >
+              Chat
+            </Button>
+            <Button 
+              onClick={() => setIsDialogOpen(true)}
+              disabled={selectedEmails.length === 0}
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Send Summary ({selectedEmails.length})
+            </Button>
+          </div>
         </div>
 
         {/* Email Dialog */}
