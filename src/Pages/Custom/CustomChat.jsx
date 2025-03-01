@@ -130,9 +130,9 @@ const MeetingChat = () => {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-gray-100">
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 flex items-center justify-center">
+      <div className="container mx-auto h-screen px-2 sm:px-4 py-4 sm:py-8 flex items-center justify-center">
        
-        <Card className="w-full sm:mt-6 md:mt-10 max-w-5xl bg-gray-900 border-gray-700 shadow-xl rounded-xl overflow-hidden">
+        <Card className="w-full sm:mt-6  md:mt-16  max-w-5xl bg-gray-900 border-gray-700 shadow-xl rounded-xl overflow-hidden">
           <CardHeader className="border-b border-gray-800 bg-gray-900/60 backdrop-blur-sm p-3 sm:p-6">
             {isFetchingMeeting ? (
               <div className="space-y-2">
@@ -220,7 +220,9 @@ const MeetingChat = () => {
                 </Tooltip>
               </TooltipProvider>
             )}
-               <CardFooter className="p-3 sm:p-4 border-t border-gray-800 bg-gray-900/80">
+              
+          </CardContent>
+          <CardFooter className="p-3 sm:p-4 border-t border-gray-800 bg-gray-900/80">
             <form onSubmit={handleSubmit} className="flex w-full gap-2">
               <Input 
                 ref={inputRef}
@@ -250,8 +252,6 @@ const MeetingChat = () => {
               </Button>
             </form>
           </CardFooter>
-          </CardContent>
-
        
         </Card>
       </div>
