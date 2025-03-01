@@ -46,7 +46,10 @@ const useStore = create((set) => ({
   setLocalPeerId: (id) => set({ localPeerId: id }),
   addParticipant: (participant) =>
     set((state) => {
-      if (!participant || state.participants.some((p) => p.id === participant.id))
+      if (
+        !participant ||
+        state.participants.some((p) => p.id === participant.id)
+      )
         return {};
       return { participants: [...state.participants, participant] };
     }),
@@ -56,7 +59,10 @@ const useStore = create((set) => ({
     })),
   addStream: (newStream) =>
     set((state) => {
-      if (!newStream || state.streams.some((stream) => stream.id === newStream.id))
+      if (
+        !newStream ||
+        state.streams.some((stream) => stream.id === newStream.id)
+      )
         return {};
       return { streams: [...state.streams, newStream] };
     }),
@@ -101,9 +107,7 @@ const InviteUsers = ({ roomId, isOpen = false, onOpenChange = () => {} }) => {
   // Toggle selection for a given email
   const handleEmailToggle = (email) => {
     setSelectedEmails((prev) =>
-      prev.includes(email)
-        ? prev.filter((e) => e !== email)
-        : [...prev, email]
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
     );
   };
 
@@ -468,6 +472,7 @@ const MeetingPage = () => {
       setProcessingStep("Generating summary...");
       setProcessingProgress(70);
 
+      // Modified prompt for structured JSON response
       const summaryResponse = await fetch(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCEn0b9Ilfz8fouSI6iHYuunBJTEEiWGec",
         {
@@ -478,17 +483,16 @@ const MeetingPage = () => {
               {
                 parts: [
                   {
-                    text: `You are an AI meeting assistant. Given the following meeting transcript, generate a detailed summary in valid JSON format with the following keys:
+                    text: `Generate meeting summary in this EXACT JSON format:
 {
-  "meetingTitle": "A brief, descriptive title for the meeting",
-  "summary": "A comprehensive summary covering key decisions, action items, and main discussion points",
+  "title": "Meeting Title",
+  "summary": "Detailed summary...",
   "tasks": [
-    { "assignee": "Name of the participant", "taskDescription": "Description of the task assigned" }
+    {"assignee": "Name", "task": "Description"},
+    {"assignee": "Name", "task": "Description"}
   ]
 }
-If no tasks were assigned, the "tasks" array should be empty.
-Transcript:
-${transcriptText}`,
+Transcript: ${transcriptText}`,
                   },
                 ],
               },
@@ -501,11 +505,18 @@ ${transcriptText}`,
 
       const summaryData = await summaryResponse.json();
       const fullResponseText = summaryData.candidates[0].content.parts[0].text;
+      // Extract the JSON portion by finding the first '{' and the last '}'
+      const jsonStart = fullResponseText.indexOf("{");
+      const jsonEnd = fullResponseText.lastIndexOf("}");
+      if (jsonStart === -1 || jsonEnd === -1) {
+        throw new Error("No valid JSON object found in the response");
+      }
+      const jsonString = fullResponseText.substring(jsonStart, jsonEnd + 1);
       let summaryObj;
       try {
-        summaryObj = JSON.parse(fullResponseText);
+        summaryObj = JSON.parse(jsonString);
       } catch (err) {
-        throw new Error("Failed to parse summary JSON");
+        throw new Error("Failed to parse summary JSON after extraction");
       }
 
       meetingTitle =
@@ -578,7 +589,9 @@ ${transcriptText}`,
         ? "video/webm; codecs=vp9"
         : "video/webm";
 
-      mediaRecorderRef.current = new MediaRecorder(combinedStream, { mimeType });
+      mediaRecorderRef.current = new MediaRecorder(combinedStream, {
+        mimeType,
+      });
       recordedChunks.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -865,7 +878,9 @@ ${transcriptText}`,
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-gray-800/50 rounded-xl p-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold text-white">Room: {roomId}</h1>
+              <h1 className="text-xl font-semibold text-white">
+                Room: {roomId}
+              </h1>
               <Button
                 variant="ghost"
                 size="sm"
@@ -909,7 +924,11 @@ ${transcriptText}`,
       </div>
 
       {/* InviteUsers Modal */}
-      <InviteUsers roomId={roomId} isOpen={inviteOpen} onOpenChange={setInviteOpen} />
+      <InviteUsers
+        roomId={roomId}
+        isOpen={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
 
       {/* Recording URL */}
       {uploadUrl && (
@@ -960,7 +979,9 @@ ${transcriptText}`,
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-white font-medium">
-                      {participant.id === localPeerId ? "You" : participant.name}
+                      {participant.id === localPeerId
+                        ? "You"
+                        : participant.name}
                       {participant.isAdmin && " (Host)"}
                     </span>
                     {participant.id === localPeerId && isMuted && (
@@ -998,7 +1019,11 @@ ${transcriptText}`,
               }`}
               onClick={toggleMute}
             >
-              {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              {isMuted ? (
+                <MicOff className="h-6 w-6" />
+              ) : (
+                <Mic className="h-6 w-6" />
+              )}
             </Button>
             <Button
               variant="ghost"
@@ -1052,7 +1077,9 @@ const Video = ({ stream, isLocal, isVideoOff }) => {
       autoPlay
       playsInline
       muted={isLocal}
-      className={`w-full h-full object-cover ${isVideoOff ? "invisible" : "visible"}`}
+      className={`w-full h-full object-cover ${
+        isVideoOff ? "invisible" : "visible"
+      }`}
     />
   );
 };
@@ -1108,7 +1135,9 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
       if (attempts === maxAttempts) throw new Error("Transcription timed out");
       const formattedTranscript =
         transcriptResult.utterances
-          ?.map((utterance) => `Speaker ${utterance.speaker}: ${utterance.text}`)
+          ?.map(
+            (utterance) => `Speaker ${utterance.speaker}: ${utterance.text}`
+          )
           ?.join("\n\n") || transcriptResult.text;
       setTranscript(formattedTranscript);
     } catch (err) {
@@ -1130,24 +1159,26 @@ You are an AI meeting assistant. Given the meeting transcript below, generate a 
 Transcript:
 ${transcript}
       `;
-  
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [{
-              parts: [{ text: prompt }],
-            }],
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
             temperature: 0.5,
             max_tokens: 600,
           }),
         }
       );
-  
+
       if (!response.ok) throw new Error("Summary generation failed");
-  
+
       const data = await response.json();
       const summaryText = data.candidates[0].content.parts[0].text;
       let summaryObj;
@@ -1163,7 +1194,6 @@ ${transcript}
       setSummaryLoading(false);
     }
   };
-  
 
   return (
     <Card className="bg-gray-800/50 border-gray-700">
