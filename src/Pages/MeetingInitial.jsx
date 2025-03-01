@@ -267,15 +267,13 @@ const Home = () => {
     setUserName(name);
   };
 
-    const joinRoom = () => {
-      if (!name || !roomCode)
-        return alert("Please enter your name and room code");
-      setRoomId(roomCode);
-      setIsAdmin(false);
-      setUserName(name);
-    };
-
-  
+  const joinRoom = () => {
+    if (!name || !roomCode)
+      return alert("Please enter your name and room code");
+    setRoomId(roomCode);
+    setIsAdmin(false);
+    setUserName(name);
+  };
 
   let user = { role: null }; // Default value
   try {
@@ -480,13 +478,15 @@ const MeetingPage = () => {
               {
                 parts: [
                   {
-                    text: `Generate a detailed meeting summary from this transcript. First, create a brief, descriptive title for this meeting. Then provide a comprehensive summary highlighting key decisions, action items, and main discussion points. Format your response as follows:
-                    
-TITLE: [Meeting Title]
-
-SUMMARY:
-[Your detailed summary]
-
+                    text: `You are an AI meeting assistant. Given the following meeting transcript, generate a detailed summary in valid JSON format with the following keys:
+{
+  "meetingTitle": "A brief, descriptive title for the meeting",
+  "summary": "A comprehensive summary covering key decisions, action items, and main discussion points",
+  "tasks": [
+    { "assignee": "Name of the participant", "taskDescription": "Description of the task assigned" }
+  ]
+}
+If no tasks were assigned, the "tasks" array should be empty.
 Transcript:
 ${transcriptText}`,
                   },
@@ -500,21 +500,20 @@ ${transcriptText}`,
       if (!summaryResponse.ok) throw new Error("Summary generation failed");
 
       const summaryData = await summaryResponse.json();
-      const fullResponse = summaryData.candidates[0].content.parts[0].text;
-
-      const titleMatch = fullResponse.match(/TITLE:\s*(.*?)(?:\n|\r|$)/);
-      meetingTitle = titleMatch
-        ? titleMatch[1].trim()
-        : `Meeting ${new Date().toLocaleDateString()}`;
-
-      const summaryStartIndex = fullResponse.indexOf("SUMMARY:");
-      if (summaryStartIndex !== -1) {
-        summaryText = fullResponse.substring(summaryStartIndex + 8).trim();
-      } else {
-        summaryText = fullResponse;
+      const fullResponseText = summaryData.candidates[0].content.parts[0].text;
+      let summaryObj;
+      try {
+        summaryObj = JSON.parse(fullResponseText);
+      } catch (err) {
+        throw new Error("Failed to parse summary JSON");
       }
 
-      // Step 3: Save to database
+      meetingTitle =
+        summaryObj.meetingTitle || `Meeting ${new Date().toLocaleDateString()}`;
+      summaryText = summaryObj.summary || "";
+      const tasks = summaryObj.tasks || [];
+
+      // Step 3: Save to database (including tasks)
       setProcessingStep("Saving meeting data...");
       setProcessingProgress(90);
 
@@ -530,6 +529,7 @@ ${transcriptText}`,
             videoUrl: videoUrl,
             transcribe: transcriptText,
             summary: summaryText,
+            tasks: tasks,
           }),
         }
       );
@@ -588,7 +588,7 @@ ${transcriptText}`,
       mediaRecorderRef.current.onstop = async () => {
         setProcessingStep("Uploading recording...");
         setProcessingProgress(10);
-        
+
         const blob = new Blob(recordedChunks.current, { type: mimeType });
         const cloudinaryResponse = await uploadVideoToCloudinary(blob);
         if (cloudinaryResponse?.secure_url) {
@@ -612,7 +612,7 @@ ${transcriptText}`,
       setShowProcessingModal(true);
       setProcessingStep("Preparing recording...");
       setProcessingProgress(5);
-      
+
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
@@ -875,7 +875,9 @@ ${transcriptText}`,
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-gray-400 text-sm">{participants.length} participants</p>
+            <p className="text-gray-400 text-sm">
+              {participants.length} participants
+            </p>
           </div>
           <div className="flex items-center space-x-3">
             {/* Invite Participants Button */}
@@ -1120,22 +1122,13 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
     setSummaryLoading(true);
     setError("");
     try {
-      // Create a structured prompt with a clear output format and a sample for guidance
       const prompt = `
-        Generate a detailed meeting summary in JSON format with the following keys:
-        - mainDiscussion: A concise overview of the meeting discussion.
-        - keyDecisions: A list of the key decisions made.
-        - actionItems: A list of actionable items agreed upon.
-        
-        Example:
-        {
-          "mainDiscussion": "Discussed project timelines and resource allocation.",
-          "keyDecisions": ["Approved new project timeline", "Increased budget for marketing"],
-          "actionItems": ["Schedule follow-up meeting", "Draft updated timeline document"]
-        }
-        
-        Now, summarize the meeting transcript below:
-        ${transcript}
+You are an AI meeting assistant. Given the meeting transcript below, generate a detailed summary in valid JSON format with the following keys:
+- meetingTitle: A brief, descriptive title for the meeting.
+- summary: A comprehensive summary covering key decisions, action items, and main discussion points.
+- tasks: An array of objects representing tasks assigned during the meeting, each with "assignee" and "taskDescription". If no tasks are assigned, return an empty array.
+Transcript:
+${transcript}
       `;
   
       const response = await fetch(
@@ -1147,8 +1140,8 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
             contents: [{
               parts: [{ text: prompt }],
             }],
-            temperature: 0.5, // Lower value for more consistency
-            max_tokens: 500,  // Adjust based on expected summary length
+            temperature: 0.5,
+            max_tokens: 600,
           }),
         }
       );
@@ -1156,16 +1149,14 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
       if (!response.ok) throw new Error("Summary generation failed");
   
       const data = await response.json();
-      // Expecting a JSON formatted response
       const summaryText = data.candidates[0].content.parts[0].text;
-      // Parse if it's valid JSON; otherwise, you might need additional processing
+      let summaryObj;
       try {
-        const summaryJSON = JSON.parse(summaryText);
-        setSummary(summaryJSON);
+        summaryObj = JSON.parse(summaryText);
       } catch (err) {
-        // If parsing fails, fallback to the raw text
-        setSummary(summaryText);
+        throw new Error("Failed to parse summary JSON");
       }
+      setSummary(summaryObj);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1183,7 +1174,7 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
               {error}
             </div>
           )}
-          {/* You could optionally display the transcript and summary here */}
+          {/* Optionally display transcript and summary */}
         </div>
       </CardContent>
     </Card>
