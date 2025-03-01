@@ -1120,34 +1120,59 @@ const VideoToTextPage = ({ initialVideoUrl = "" }) => {
     setSummaryLoading(true);
     setError("");
     try {
+      // Create a structured prompt with a clear output format and a sample for guidance
+      const prompt = `
+        Generate a detailed meeting summary in JSON format with the following keys:
+        - mainDiscussion: A concise overview of the meeting discussion.
+        - keyDecisions: A list of the key decisions made.
+        - actionItems: A list of actionable items agreed upon.
+        
+        Example:
+        {
+          "mainDiscussion": "Discussed project timelines and resource allocation.",
+          "keyDecisions": ["Approved new project timeline", "Increased budget for marketing"],
+          "actionItems": ["Schedule follow-up meeting", "Draft updated timeline document"]
+        }
+        
+        Now, summarize the meeting transcript below:
+        ${transcript}
+      `;
+  
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCEn0b9Ilfz8fouSI6iHYuunBJTEEiWGec`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Generate a Detailed summary of the following meeting transcript, highlighting key decisions, action items, and main discussion points:\n\n${transcript}`,
-                  },
-                ],
-              },
-            ],
+            contents: [{
+              parts: [{ text: prompt }],
+            }],
+            temperature: 0.5, // Lower value for more consistency
+            max_tokens: 500,  // Adjust based on expected summary length
           }),
         }
       );
+  
       if (!response.ok) throw new Error("Summary generation failed");
+  
       const data = await response.json();
+      // Expecting a JSON formatted response
       const summaryText = data.candidates[0].content.parts[0].text;
-      setSummary(summaryText);
+      // Parse if it's valid JSON; otherwise, you might need additional processing
+      try {
+        const summaryJSON = JSON.parse(summaryText);
+        setSummary(summaryJSON);
+      } catch (err) {
+        // If parsing fails, fallback to the raw text
+        setSummary(summaryText);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setSummaryLoading(false);
     }
   };
+  
 
   return (
     <Card className="bg-gray-800/50 border-gray-700">

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Loader2, User, Bot, Clock, ArrowDown } from "lucide-react";
+import { MessageSquare, Send, Loader2, User, Bot, Clock, ArrowDown, Fan, WandSparkles, Sparkles, CheckCheck  } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -131,6 +131,7 @@ const MeetingChat = () => {
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 text-gray-100">
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 flex items-center justify-center">
+       
         <Card className="w-full sm:mt-6 md:mt-10 max-w-5xl bg-gray-900 border-gray-700 shadow-xl rounded-xl overflow-hidden">
           <CardHeader className="border-b border-gray-800 bg-gray-900/60 backdrop-blur-sm p-3 sm:p-6">
             {isFetchingMeeting ? (
@@ -153,8 +154,8 @@ const MeetingChat = () => {
             )}
           </CardHeader>
           
-          <CardContent className="p-0 relative">
-            <ScrollArea ref={scrollAreaRef} className="h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+          <CardContent className="p-0 relative ">
+            <ScrollArea ref={scrollAreaRef} className="h-[350px] sm:h-[400px] md:h-[500px] lg:h-[500px] ">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-gray-500 p-6">
                   <MessageSquare className="h-12 w-12 mb-4 opacity-20" />
@@ -169,8 +170,8 @@ const MeetingChat = () => {
                       <div className="flex items-start max-w-[90%] sm:max-w-[85%] gap-2">
                         {msg.role !== "user" && (
                           <div className="flex-shrink-0 mt-1">
-                            <Avatar className="h-8 w-8 bg-gradient-to-br from-blue-500 to-violet-600 text-white flex items-center justify-center">
-                              <Bot className="h-4 w-4" />
+                            <Avatar className=" h-8 w-8 bg-gradient-to-br from-blue-500 to-violet-600 text-white flex items-center justify-center">
+                              <Fan className="h-4 w-4" />
                             </Avatar>
                           </div>
                         )}
@@ -183,13 +184,13 @@ const MeetingChat = () => {
                             {formatMessageContent(msg.content)}
                           </div>
                           <div className="text-xs opacity-70 mt-1 flex items-center justify-end gap-1">
-                            <Clock className="h-3 w-3" />
+                            <CheckCheck className="h-3 w-3" />
                             {getMessageTime()}
                           </div>
                         </div>
                         {msg.role === "user" && (
                           <div className="flex-shrink-0 mt-1">
-                            <Avatar className="h-8 w-8 bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center">
+                            <Avatar className="h-8 w-8 bg-gradient-to-br from-emerald-800 to-teal-600 text-white flex items-center justify-center">
                               <User className="h-4 w-4" />
                             </Avatar>
                           </div>
