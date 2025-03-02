@@ -519,8 +519,9 @@ Transcript: ${transcriptText}`,
         throw new Error("Failed to parse summary JSON after extraction");
       }
 
+      // UPDATED: Use "title" key instead of "meetingTitle"
       meetingTitle =
-        summaryObj.meetingTitle || `Meeting ${new Date().toLocaleDateString()}`;
+        summaryObj.title || `Meeting ${new Date().toLocaleDateString()}`;
       summaryText = summaryObj.summary || "";
       const tasks = summaryObj.tasks || [];
 

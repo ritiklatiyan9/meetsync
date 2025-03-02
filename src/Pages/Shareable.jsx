@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Calendar, Video, FileText, Mail, Send, Pencil, MessageCircle } from "lucide-react";
+import { Calendar, Video, FileText, Mail, Send, Pencil, MessageCircle, Rotate3d } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,7 +53,9 @@ const Shareable = () => {
       try {
         const [usersRes, meetingRes] = await Promise.all([
           fetch("https://meetsync-backend.vercel.app/api/v1/users/getall"),
-          fetch(`https://meetsync-backend.vercel.app/api/v1/meeting/${meetingId}`),
+          fetch(
+            `https://meetsync-backend.vercel.app/api/v1/meeting/${meetingId}`
+          ),
         ]);
 
         if (!usersRes.ok || !meetingRes.ok) {
@@ -140,18 +142,18 @@ const Shareable = () => {
               <h2 style="color: #2563eb;">${meeting.title}</h2>
               <p><strong>Date:</strong> ${formatDate(meeting.createdAt)}</p>
               <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-                <h3 style="color: #2563eb; margin-bottom: 12px;">Chat with Meeting AI</h3>
-                <p style="color: #374151; margin-bottom: 15px;">
-                  Access our AI chatbot for follow-up questions about this meeting:
-                </p>
-                <a href="https://meetsyncai.vercel.app/chat/${meetingId}" 
-                   style="display: inline-block; padding: 10px 20px; 
-                          background-color: #2563eb; color: white; 
-                          text-decoration: none; border-radius: 5px;
-                          font-weight: 500;">
-                  MeetSync AI Chat
-                </a>
-              </div>
+              <h3 style="color: #2563eb; margin-bottom: 12px;">Chat with Meeting AI</h3>
+              <p style="color: #374151; margin-bottom: 15px;">
+                Access our AI chatbot for follow-up questions about this meeting:
+              </p>
+              <a href="https://meetsyncai.vercel.app/chat/${meetingId}" 
+                 style="display: inline-block; padding: 10px 20px; 
+                        background-color: #2563eb; color: white; 
+                        text-decoration: none; border-radius: 5px;
+                        font-weight: 500;">
+                Open Meeting Chat
+              </a>
+            </div>
               ${
                 meeting.videoUrl
                   ? `<p><strong>Recording:</strong> 
@@ -162,6 +164,7 @@ const Shareable = () => {
                   : ""
               }
               <div style="margin-top: 20px;">
+                
                 <h3 style="color: #374151;">Meeting Summary</h3>
                 <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
                   ${parseSummary(meeting.summary).main}
@@ -234,7 +237,7 @@ const Shareable = () => {
   // Summary parsing logic
   const parseSummary = (summary) => {
     if (!summary) return { main: "", decisions: [], actions: [] };
-    const cleanSummary = summary.replace(/\\/g, "").replace(/\*/g, "");
+    const cleanSummary = summary.replace(/\*\*/g, "").replace(/\*/g, "");
 
     const decisionsMatch = cleanSummary.match(
       /Key Decisions:(.*?)Action Items:/s
@@ -310,17 +313,17 @@ const Shareable = () => {
 
   // Main component render
   return (
-    <div className="min-h-screen bg-gray-950 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-950 p-8">
       <Toaster richColors />
       
-      <div className="max-w-6xl mx-auto mt-4 md:mt-12">
+      <div className="max-w-6xl mx-auto mt-12">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-100">Meeting Details</h1>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-100">Meeting Details</h1>
+          <div className="flex gap-4">
             <Button
               onClick={() => navigate(`/chat/${meetingId}`)}
-              className="bg-blue-600 hover:bg-blue-700 gap-2 flex-1 sm:flex-none"
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
             >
               <MessageCircle className="w-4 h-4" />
               Chat
@@ -328,25 +331,24 @@ const Shareable = () => {
             <Button
               onClick={() => setIsDialogOpen(true)}
               disabled={selectedEmails.length === 0}
-              className="bg-blue-600 hover:bg-blue-700 gap-2 flex-1 sm:flex-none"
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
             >
               <Mail className="w-4 h-4" />
-              <span className="hidden sm:inline">Send Summary</span>
-              <span className="sm:hidden">Send</span> ({selectedEmails.length})
+              Send Summary ({selectedEmails.length})
             </Button>
           </div>
         </div>
 
         {/* Email Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-gray-900 text-white border-gray-800 max-w-full sm:max-w-lg md:max-w-2xl mx-4 w-auto">
+          <DialogContent className="bg-gray-900 text-white border-gray-800 max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl md:text-2xl">Send Summary</DialogTitle>
+              <DialogTitle className="text-2xl">Send Summary</DialogTitle>
               <DialogDescription className="text-gray-400">
                 Select recipients and customize message
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 md:space-y-6">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="subject">Subject</Label>
                 <Input
@@ -373,7 +375,7 @@ const Shareable = () => {
               </div>
               <div className="space-y-2">
                 <Label>Recipients</Label>
-                <div className="max-h-36 md:max-h-48 overflow-y-auto border border-gray-700 rounded-lg p-2">
+                <div className="max-h-48 overflow-y-auto border border-gray-700 rounded-lg p-2">
                   {users
                     .sort((a, b) => {
                       const aHasTasks = taskAssignments.some(
@@ -400,16 +402,16 @@ const Shareable = () => {
                             onChange={() => handleEmailToggle(user.email)}
                             className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
                           />
-                          <div className="flex-1 overflow-hidden">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-gray-300 truncate">{user.name}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-gray-300">{user.name}</p>
                               {hasTasks && (
                                 <span className="px-2 py-1 text-xs bg-green-900/30 text-green-400 rounded-full">
                                   Has Tasks
                                 </span>
                               )}
                             </div>
-                            <p className="text-gray-400 text-sm truncate">{user.email}</p>
+                            <p className="text-gray-400 text-sm">{user.email}</p>
                           </div>
                         </div>
                       );
@@ -460,9 +462,9 @@ const Shareable = () => {
 
         {/* Edit Summary Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="bg-gray-900 text-white border-gray-800 max-w-full sm:max-w-lg md:max-w-4xl mx-4 w-auto h-[80vh] md:h-auto">
+          <DialogContent className="bg-gray-900 text-white border-gray-800 max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="text-xl md:text-2xl">Edit Summary</DialogTitle>
+              <DialogTitle className="text-2xl">Edit Summary</DialogTitle>
               <DialogDescription className="text-gray-400">
                 Modify meeting summary using markdown
               </DialogDescription>
@@ -470,7 +472,7 @@ const Shareable = () => {
             <Textarea
               value={editedSummary}
               onChange={(e) => setEditedSummary(e.target.value)}
-              className="bg-gray-800 text-white h-72 md:h-96 font-mono text-sm"
+              className="bg-gray-800 text-white h-96 font-mono text-sm"
             />
             <DialogFooter>
               <Button
@@ -485,11 +487,11 @@ const Shareable = () => {
         </Dialog>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Meeting Info Card */}
-          <Card className="bg-gray-900 text-white shadow-lg border-0">
+          <Card className="bg-gray-900 text-white shadow-lg border-0 lg:col-span-1">
             <CardHeader className="border-b border-gray-800 pb-4">
-              <CardTitle className="text-xl md:text-2xl font-semibold">
+              <CardTitle className="text-2xl font-semibold">
                 {loading ? (
                   <Skeleton className="h-8 w-[200px]" />
                 ) : (
@@ -499,10 +501,10 @@ const Shareable = () => {
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <div className="overflow-hidden">
+                <Calendar className="w-5 h-5 text-blue-400" />
+                <div>
                   <p className="text-gray-400 text-sm">Created</p>
-                  <p className="text-gray-100 truncate">
+                  <p className="text-gray-100">
                     {loading ? (
                       <Skeleton className="h-4 w-[160px]" />
                     ) : (
@@ -512,15 +514,15 @@ const Shareable = () => {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Video className="w-5 h-5 text-blue-400 mt-1 flex-shrink-0" />
-                <div className="overflow-hidden">
+                <Video className="w-5 h-5 text-blue-400 mt-1" />
+                <div>
                   <p className="text-gray-400 text-sm">Recording</p>
                   {loading ? (
                     <Skeleton className="h-4 w-[120px]" />
                   ) : (
                     <a
                       href={meeting?.videoUrl}
-                      className="text-blue-400 hover:text-blue-300 text-sm block truncate"
+                      className="text-blue-400 hover:text-blue-300 text-sm"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -535,17 +537,17 @@ const Shareable = () => {
           </Card>
 
           {/* Summary Card */}
-          <Card className="bg-gray-900 text-white shadow-lg border-0">
+          <Card className="bg-gray-900 text-white shadow-lg border-0 lg:col-span-2">
             <CardHeader className="border-b border-gray-800 pb-4">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-xl md:text-2xl font-semibold flex items-center gap-2">
+                <CardTitle className="text-2xl font-semibold flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-400" /> Summary
                 </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={openEditDialog}
-                  className="text-gray-400 hover:bg-gray-400 hover:text-gray-900"
+                  className="text-gray-400 hover:bg-gray-400     hover:text-gray-900"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit
@@ -569,7 +571,7 @@ const Shareable = () => {
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <h3 className="text-lg font-medium text-gray-200 mb-2 flex items-center">
                     <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
@@ -620,75 +622,74 @@ const Shareable = () => {
         </div>
 
         {/* Task Assignments Table */}
-        <Card className="bg-gray-900 text-white mt-6 md:mt-8">
+        <Card className="bg-gray-900 text-white mt-8">
           <CardHeader className="border-b border-gray-800">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg md:text-xl">Task Assignments</CardTitle>
+              <CardTitle className="text-xl">Task Assignments</CardTitle>
+              
             </div>
           </CardHeader>
-          <CardContent className="pt-6 overflow-x-auto">
+          <CardContent className="pt-6">
             {loadingAssignments ? (
               <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
               </div>
             ) : (
-              <div className="min-w-full overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b border-gray-800 hover:bg-gray-700">
-                      <TableHead className="text-gray-300">Assignee</TableHead>
-                      <TableHead className="text-gray-300">Task</TableHead>
-                      <TableHead className="text-gray-300">Confidence</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {taskAssignments.map((assignment, idx) => (
-                      <TableRow key={idx} className="border-b border-gray-800 hover:bg-gray-700">
-                        <TableCell className="py-2 md:py-4">
-                          <div className="flex items-center gap-2">
-                            {assignment.email ? (
-                              <>
-                                <span className="text-blue-400">✓</span>
-                                <div className="overflow-hidden">
-                                  <p className="text-gray-100 text-sm truncate">{assignment.name}</p>
-                                  <p className="text-xs text-gray-400 truncate">{assignment.email}</p>
-                                </div>
-                              </>
-                            ) : (
-                              <div className="flex items-center gap-2 text-orange-400">
-                                <span>⚠</span>
-                                <span className="truncate">{assignment.name}</span>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-gray-800 hover:bg-gray-700">
+                    <TableHead className="text-gray-300">Assignee</TableHead>
+                    <TableHead className="text-gray-300">Task</TableHead>
+                    <TableHead className="text-gray-300">Confidence</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {taskAssignments.map((assignment, idx) => (
+                    <TableRow key={idx} className="border-b border-gray-800 hover:bg-gray-700">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {assignment.email ? (
+                            <>
+                              <span className="text-blue-400">✓</span>
+                              <div>
+                                <p className="text-gray-100">{assignment.name}</p>
+                                <p className="text-xs text-gray-400">{assignment.email}</p>
                               </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-300 text-sm py-2 md:py-4">
-                          {assignment.assignedTask}
-                        </TableCell>
-                        <TableCell className="py-2 md:py-4">
-                          <span className="text-green-400 text-sm">
-                            {assignment.confidence || 'High'}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-2 text-orange-400">
+                              <span>⚠️</span>
+                              {assignment.name}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-300">
+                        {assignment.assignedTask}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-green-400">
+                          {assignment.confidence || 'High'}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>
 
         {/* Participants Table */}
-        <Card className="bg-gray-900 text-white mt-6 md:mt-8">
+        <Card className="bg-gray-900 text-white mt-8">
           <CardHeader className="border-b border-gray-800">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg md:text-xl">Participants</CardTitle>
+              <CardTitle className="text-xl">Participants</CardTitle>
               <Button
                 variant="ghost"
                 onClick={handleSelectAll}
-                className="text-gray-400 hover:text-gray-800 hover:bg-gray-400 text-xs sm:text-sm"
+                className="text-gray-400 hover:text-gray-800 hover:bg-gray-400"
               >
                 {selectedEmails.length === users.length
                   ? "Deselect All"
@@ -696,63 +697,58 @@ const Shareable = () => {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-6 overflow-x-auto">
-            <div className="min-w-full overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-gray-800 hover:bg-gray-800">
-                    <TableHead className="w-8">
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-gray-800 hover:bg-gray-800">
+                  <TableHead className="w-8">
+                    <input
+                      type="checkbox"
+                      checked={selectedEmails.length === users.length}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-blue-600 bg-gray-700  border-gray-600 rounded"
+                    />
+                  </TableHead>
+                  <TableHead className="text-gray-300">Name</TableHead>
+                  <TableHead className="text-gray-300">Email</TableHead>
+                  <TableHead className="text-gray-300">Role</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow
+                    key={user._id}
+                    className="hover:bg-gray-800 border-b border-gray-800"
+                  >
+                    <TableCell>
                       <input
                         type="checkbox"
-                        checked={selectedEmails.length === users.length}
-                        onChange={handleSelectAll}
+                        checked={selectedEmails.includes(user.email)}
+                        onChange={() => handleEmailToggle(user.email)}
                         className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
                       />
-                    </TableHead>
-                    <TableHead className="text-gray-300">Name</TableHead>
-                    <TableHead className="text-gray-300 hidden sm:table-cell">Email</TableHead>
-                    <TableHead className="text-gray-300">Role</TableHead>
+                    </TableCell>
+                    <TableCell className="font-medium text-gray-100">
+                      {user.name}
+                    </TableCell>
+                    <TableCell className="text-gray-300">
+                      {user.email}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          user.role === "admin"
+                            ? "bg-blue-900/30 text-blue-400"
+                            : "bg-green-900/30 text-green-400"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow
-                      key={user._id}
-                      className="hover:bg-gray-800 border-b border-gray-800"
-                    >
-                      <TableCell className="py-2 md:py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedEmails.includes(user.email)}
-                          onChange={() => handleEmailToggle(user.email)}
-                          className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium text-gray-100 text-sm py-2 md:py-4">
-                        <div>
-                          <span className="truncate block">{user.name}</span>
-                          <span className="text-xs text-gray-400 sm:hidden truncate block">{user.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-gray-300 text-sm hidden sm:table-cell py-2 md:py-4">
-                        <span className="truncate">{user.email}</span>
-                      </TableCell>
-                      <TableCell className="text-gray-300 text-sm py-2 md:py-4">
-                        {taskAssignments.some((t) => t.email === user.email) ? (
-                          <span className="px-2 py-1 text-xs bg-green-900/30 text-green-400 rounded-full">
-                            Assigned
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs bg-gray-700/50 text-gray-400 rounded-full">
-                            Participant
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
